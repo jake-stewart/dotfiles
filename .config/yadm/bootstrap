@@ -1,0 +1,131 @@
+#!/bin/bash
+
+set -e
+
+log() {
+    printf "\x1b[34m$1\x1b[0m\n"
+}
+
+error() {
+    printf "error: \x1b[31m$1\x1b[0m\n"
+}
+
+installing() {
+    log "installing $1..."
+}
+
+installed() {
+    log "$1 successfully installed"
+}
+
+skipped() {
+    log "$1 already installed (skipped)"
+}
+
+mkdir -p ~/.local/bin
+
+clone_zsh_plugin() {
+    path="$HOME/.config/zsh/plugins/$2"
+    [[ -e "$path" ]] && skipped "$2" && return
+    installing "$2"
+    mkdir -p "$path"
+    git clone "https://github.com/$1/$2" "$path"
+    installed "$2"
+}
+
+clone_cmake() {
+    path="$HOME/clones/$2"
+    [[ -e "$path" ]] && skipped "$2" && return
+    mkdir -p "$path"
+    installing "$2"
+    git clone "https://github.com/$1/$2" "$path"
+    cd "$path"
+    cmake -S . -B build
+    cd build
+    make
+    cp "$2" ~/.local/bin
+    installed "$2"
+}
+
+clone_vim_plug() {
+    path="$HOME/.local/share/nvim/site/autoload/plug.vim"
+    url="https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
+    [[ -e "$path" ]] && skipped "vim-plug" && return
+    installing "vim-plug"
+    curl -fLo "$path" --create-dirs "$url"
+    installed "vim-plug"
+}
+
+install_vim_plugs() {
+    installing "vim plugins"
+    nvim +PlugInstall +qall
+    installed "vim plugins"
+}
+
+command_exists() {
+    command -v "$1" &>/dev/null
+}
+
+install_htop_vim() {
+    command_exists htop && skipped "htop" && return
+    installing "htop-vim"
+    git clone https://github.com/KoffeinFlummi/htop-vim ~/clones/htop-vim
+    cd ~/clones/htop-vim
+    ./autogen.sh && ./configure && sudo make install
+    installed "htop-vim"
+}
+
+install_nvimpager() {
+    command_exists nvimpager && skipped "nvimpager" && return
+    installing "nvimpager"
+    git clone https://github.com/lucc/nvimpager ~/clones/nvimpager
+    cd ~/clones/nvimpager
+    sudo make install
+    installed "nvimpager"
+}
+
+install_brew() {
+    command_exists brew && skipped "brew" && return
+    installing "brew"
+    url="https://raw.githubusercontent.com/Homebrew/install/master/install"
+    /usr/bin/ruby -e "$(curl -fsSL $url)"
+    installed "brew"
+}
+
+install_brew_packages() {
+    installing "brew packages"
+    brew install git curl cmake neovim htop lf karabiner-elements \
+        ncurses automake autoconf gcc
+    installed "brew packages"
+}
+
+setup_macos() {
+    install_brew
+    install_brew_packages
+}
+
+ensure_installed() {
+    command_exists "$1" && return
+    error "$1 is not installed"; exit
+}
+
+[ "$(uname -s)" = "Darwin" ] && setup_macos
+
+ensure_installed git
+ensure_installed curl
+ensure_installed cmake
+ensure_installed nvim
+
+clone_vim_plug
+install_vim_plugs
+
+install_htop_vim
+install_nvimpager
+
+clone_zsh_plugin marlonrichert zsh-autocomplete
+clone_zsh_plugin zsh-users zsh-autosuggestions
+clone_zsh_plugin kutsan zsh-system-clipboard
+clone_zsh_plugin zsh-users zsh-syntax-highlighting
+
+clone_cmake jake-stewart jfind
+clone_cmake jake-stewart tmux-status
