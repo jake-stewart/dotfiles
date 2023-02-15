@@ -108,9 +108,9 @@ bindkey -M viopp -s l -
 # }}}
 # PLUGINS {{{
 
-source "$HOME/.config/zsh/zsh-system-clipboard/zsh-system-clipboard.zsh"
-source "$HOME/.config/zsh/zsh-autosuggestions/zsh-autosuggestions.zsh"
-source "$HOME/.config/zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+source "$HOME/.config/zsh/plugins/zsh-system-clipboard/zsh-system-clipboard.zsh"
+source "$HOME/.config/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
+source "$HOME/.config/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 
 # }}}
 # ZSH SYNTAX HIGHLIGHTING SETTINGS {{{
