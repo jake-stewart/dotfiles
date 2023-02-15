@@ -1,0 +1,11 @@
+export ZDOTDIR="$HOME/.config/zsh"
+export INPUTRC="$HOME/.config/inputrc"
+export LESSHISTFILE="-"
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_STATE_HOME="$HOME/.local/state"
+export NPM_CONFIG_USERCONFIG="$HOME/.config/npmrc"
+export COMPOSER_HOME="$HOME/.config/composer"
+export JAVA_HOME="/Library/Java/JavaVirtualMachines/openjdk.jdk"
+export HOMEBREW_NO_ENV_HINTS=1

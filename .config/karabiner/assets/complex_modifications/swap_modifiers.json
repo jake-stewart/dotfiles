@@ -1,0 +1,38 @@
+{
+    "title": "Swap Modifiers",
+    "rules": [{
+        "description": "Swap Modifiers",
+        "manipulators": [
+            {
+                "description": "cmd as ctrl",
+                "type": "basic",
+                "from": {
+                    "key_code": "left_command"
+                },
+                "to": [{
+                    "key_code": "left_control"
+                }]
+            },
+            {
+                "description": "ctrl as option",
+                "type": "basic",
+                "from": {
+                    "key_code": "left_control"
+                },
+                "to": [{
+                    "key_code": "left_option"
+                }]
+            },
+            {
+                "description": "option as cmd",
+                "type": "basic",
+                "from": {
+                    "key_code": "left_option"
+                },
+                "to": [{
+                    "key_code": "left_command"
+                }]
+            }
+        ]
+    }]
+}
