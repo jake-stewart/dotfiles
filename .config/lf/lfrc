@@ -1,0 +1,37 @@
+# oooo   .o88o. 
+# `888   888 `" 
+#  888  o888oo  
+#  888   888    
+#  888   888    
+#  888   888    
+# o888o o888o   
+              
+# SETTINGS {{{
+
+set incsearch
+set hidden
+# set previewer ~/.config/lf/bat_preview
+set mouse
+cmd open  # disable 'l' to 'open' files
+
+# }}}
+# KEY BINDINGS {{{
+
+map C push A<c-u>             # rename entirely
+map c push A<a-b><c-u>.<left> # rename until extension
+map I push A<c-a>             # rename at the very beginning
+map i push A<a-b><a-b><a-f>   # rename before extention
+map a push A<a-b>             # rename after extention
+map A rename                  # rename at the very end
+
+map g top
+map D delete
+map <c-c> quit
+map <space> invert
+map <esc> :clear; unselect
+map v toggle
+map V :toggle; down
+
+# }}}
+
+# vim: foldmethod=marker

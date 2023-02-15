@@ -1,0 +1,34 @@
+{
+    "title": "Disable macOS Keys",
+    "rules": [{
+        "description": "Disable macOS Keys",
+        "manipulators": [
+            {
+                "description": "disable lock key",
+                "type": "basic",
+                "from": {
+                    "consumer_key_code": "al_terminal_lock_or_screensaver"
+                },
+                "to": []
+            },
+            {
+                "description": "macOS binds cmd+h to hide the window",
+                "type": "basic",
+                "from": {
+                    "key_code": "h",
+                    "modifiers": {
+                        "mandatory": [
+                            "left_command"
+                        ]
+                    }
+                },
+                "to": [{
+                    "key_code": "h",
+                    "modifiers": [
+                        "option"
+                    ]
+                }]
+            }
+        ]
+    }]
+}

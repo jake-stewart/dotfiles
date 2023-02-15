@@ -1,0 +1,25 @@
+{
+    "title": "Disable Caps Lock",
+    "rules": [{
+        "description": "Disable Caps Lock",
+        "manipulators": [
+            {
+                "description": "disable caps lock",
+                "type": "basic",
+                "from": {
+                    "key_code": "caps_lock",
+                    "modifiers": {
+                        "optional": [
+                            "any"
+                        ]
+                    }
+                },
+                "to": [
+                    {
+                        "key_code": "right_option"
+                    }
+                ]
+            }
+        ]
+    }]
+}

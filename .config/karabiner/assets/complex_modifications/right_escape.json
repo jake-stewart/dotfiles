@@ -1,0 +1,38 @@
+{
+    "title": "Right Modifiers as Escape",
+    "rules": [{
+        "description": "Right Modifiers as Escape",
+        "manipulators": [
+            {
+                "description": "right cmd as escape",
+                "type": "basic",
+                "from": {
+                    "key_code": "right_command",
+                    "modifiers": {
+                        "optional": [
+                            "any"
+                        ]
+                    }
+                },
+                "to": [{
+                    "key_code": "escape"
+                }]
+            },
+            {
+                "description": "right option as escape",
+                "type": "basic",
+                "from": {
+                    "key_code": "right_option",
+                    "modifiers": {
+                        "optional": [
+                            "any"
+                        ]
+                    }
+                },
+                "to": [{
+                    "key_code": "escape"
+                }]
+            }
+        ]
+    }]
+}
