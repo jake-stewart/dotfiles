@@ -94,14 +94,9 @@ install_brew() {
 
 install_brew_packages() {
     installing "brew packages"
-    brew install git cmake neovim lf karabiner-elements \
-        kitty tmux python3 ncurses automake autoconf gcc
+    brew install git cmake nvim lf karabiner-elements \
+        kitty tmux python ncurses automake autoconf gcc
     installed "brew packages"
-}
-
-setup_macos() {
-    install_brew
-    install_brew_packages
 }
 
 ensure_installed() {
@@ -109,7 +104,12 @@ ensure_installed() {
     error "$1 is not installed"; exit
 }
 
-[ "$(uname -s)" = "Darwin" ] && setup_macos
+case "$(uname -s)" in
+    Darwin)
+        install_brew
+        install_brew_packages
+        ;;
+esac
 
 ensure_installed git
 ensure_installed curl
