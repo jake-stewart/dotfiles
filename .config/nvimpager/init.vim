@@ -97,15 +97,14 @@ endf
 " unmap unused keys
 let s:unmap_keys = [
         \ "a", "b", "c", "d", "e", "h", "i", "l",
-        \ "m", "o", "p", "r", "s", "t", "w",
-        \ "x", "y", "z", "A", "B", "C", "D", "E",
-        \ "F", "H", "I", "J", "K", "L", "M", "O",
-        \ "P", "Q", "R", "S", "T", "U", "W",
-        \ "X", "Y", "Z", "1", "2", "3", "4", "5",
-        \ "6", "7", "8", "9", "0", "-", "=", "[",
-        \ "]", ";", "'", ",", ".", "`", "@", "#",
-        \ "$", "%", "^", "&", "*", "(", ")", "_",
-        \ "+", "{", "}", "<", ">", "~", "<!>",
+        \ "m", "o", "p", "r", "s", "t", "w", "x",
+        \ "y", "z", "A", "B", "C", "D", "E", "F",
+        \ "H", "I", "J", "K", "L", "M", "O", "P",
+        \ "Q", "R", "S", "T", "U", "W", "X", "Y",
+        \ "Z", "-", "=", "[", "]", ";", "'", ",",
+        \ ".", "`", "@", "#", "$", "%", "^", "&",
+        \ "*", "(", ")", "_", "+", "{", "}", "<",
+        \ ">", "~", "<!>",
         \ "<bslash>", "<bar>", "\""
     \ ]
 for s:key in s:unmap_keys
@@ -142,6 +141,7 @@ nnoremap <silent>j :set nocul<CR><c-e>L0
 nnoremap <silent>k :set nocul<CR><c-y>L0
 
 nnoremap <silent>gg :set nocul<CR>ggL0
+nnoremap <silent>G GztL0:set nocul<CR>
 
 nnoremap <silent><expr>zt &cul ? "zt" : ""
 nnoremap <silent><expr>zb &cul ? "zb" : ""

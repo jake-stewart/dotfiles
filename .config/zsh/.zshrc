@@ -161,7 +161,7 @@ bindkey '^K' autosuggest-accept
 
 # parse commands in prompt string
 setopt PROMPT_SUBST
-PROMPT='$(branch_name)$(basename $(pwd)) $ '
+PROMPT='$(branch_name)$(basename "$(pwd)") $ '
 
 # prepend '[branch]' to the start of prompt if in git repo
 branch_name() {
@@ -184,6 +184,24 @@ precmd() {
         echo
     }
 }
+
+# evaluate math expressions with python
+math() {
+    python3 -c "print($1)"
+}
+
+accept-line-math () {
+    if [[ "$BUFFER" =~ "^[0-9()].*" ]]; then
+        echo
+        python3 -c "print(${BUFFER})"
+        print -s "$BUFFER"
+        BUFFER=""
+        skip_precmd
+    fi
+    zle .accept-line
+
+}
+zle -N accept-line accept-line-math
 
 # make ctrl+c print ^C
 TRAPINT() { 
@@ -314,11 +332,12 @@ lscat() {
 }
 
 whatis() {
-    [[ $? -eq 1 ]] && echo "Usage: whatis {command}" && exit 1;
+    [[ "$#" -eq 0 ]] && echo "Usage: whatis {command}" && return;
     for arg in $@; do
-        man -P cat $arg \
-            | awk 'name==1{print $0; exit} /N.*A.*M.*E[^A-Za-z]*$/{name=1}' \
-            | sed 's/^[ \t]*//g'
+        MANWIDTH=1000 man -P cat $arg \
+            | head -20 \
+            | grep -m 1 -E '^.*( |\t)+[–-]( |\t)+' \
+            | sed -E "s/^.*( |\t)+[–-]( |\t)+/$arg - /"
     done
 }
 
@@ -362,6 +381,10 @@ alias cat=catls
 alias js-beautify='js-beautify -b end-expand'
 alias yarn='yarn --emoji false'
 alias ctags="`brew --prefix`/bin/ctags"
+alias man='man'
+
+# git config --global pager.log 'nvimpager -p'
+# git config --global --replace-all core.pager 'less -F -X'
 
 # }}}
 # EXPORTS {{{

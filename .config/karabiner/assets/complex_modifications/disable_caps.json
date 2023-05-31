@@ -10,15 +10,14 @@
                     "key_code": "caps_lock",
                     "modifiers": {
                         "optional": [
-                            "any"
+                            "shift",
+                            "command",
+                            "control",
+                            "option"
                         ]
                     }
                 },
-                "to": [
-                    {
-                        "key_code": "right_option"
-                    }
-                ]
+                "to": []
             }
         ]
     }]

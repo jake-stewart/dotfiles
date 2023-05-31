@@ -208,12 +208,16 @@ nnoremap <silent> <c-u> :call Scroll("k")<CR>
 " nnoremap <c-u> M<c-u>
 
 " cgn on current word
-nnoremap <silent><leader>n :let @/='\C\<'.expand("<cword>").'\>'<CR>:set hls<CR>cgn
-nnoremap <silent><leader>N :let @/='\C\<'.expand("<cword>").'\>'<CR>:set hls<CR>cgN
+nnoremap <silent><leader>n :let @/='\C\V\<'.expand("<cword>").'\>'<CR>:set hls<CR>cgn
+nnoremap <silent><leader>N :let @/='\C\V\<'.expand("<cword>").'\>'<CR>:set hls<CR>cgN
 
 " cgn on selection
-xnoremap <silent><leader>n "zy:let @/=@z<CR>cgn
-xnoremap <silent><leader>N "zy:let @/=@z<CR>cgN
+xnoremap <silent><leader>n "zy:let @/='\C\V'.@z<CR>:set hls<CR>cgn
+xnoremap <silent><leader>N "zy:let @/='\C\V'.@z<CR>:set hls<CR>cgN
+
+" record macro on current word and selection
+nnoremap <silent><leader>q :let @/='\C\V\<'.expand("<cword>").'\>'<CR>:set hls<CR>qq
+xnoremap <silent><leader>q "zy:let @/='\C\V'.@z<CR>:set hls<CR>qq
 
 " make Y act like D and C
 nnoremap Y y$
@@ -221,7 +225,7 @@ nnoremap Y y$
 " easily repeat macro with q
 nnoremap Q @q
 
-" ^, $, and %, <c-6> are motions I use all the time
+" ^, $, and %, <c-^> are motions I use all the time
 " however, the keys are in awful positions
 map gh ^
 map gl $
@@ -391,6 +395,11 @@ vnoremap <expr><leader>k Slide(-1, 1)
 let g:polyglot_disabled = ['sensible']
 
 " }}}
+" COPILOT SETTINGS {{{
+
+let g:copilot_enabled = v:false
+
+" }}}
 " PLUGINS {{{
 
 call plug#begin()
@@ -411,6 +420,7 @@ Plug 'kana/vim-textobj-line'
 Plug 'glts/vim-textobj-comment'
 Plug 'michaeljsmith/vim-indent-object'
 Plug 'junegunn/vim-easy-align', { 'on': '<plug>(EasyAlign)' }
+" Plug 'neoclide/coc.nvim'
 Plug 'neovim/nvim-lspconfig'
 Plug 'hrsh7th/cmp-nvim-lsp'
 Plug 'hrsh7th/cmp-buffer'
@@ -420,12 +430,27 @@ Plug 'hrsh7th/nvim-cmp'
 Plug 'hrsh7th/cmp-nvim-lsp-signature-help'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plug 'nvim-treesitter/playground'
+Plug 'Hoffs/omnisharp-extended-lsp.nvim'
+" Plug 'ErichDonGubler/lsp_lines.nvim'
+
+Plug 'github/copilot.vim'
+
+Plug 'hrsh7th/cmp-vsnip'
+Plug 'hrsh7th/vim-vsnip'
+" Plug 'L3MON4D3/LuaSnip'
+" Plug 'saadparwaiz1/cmp_luasnip'
+" Plug 'dcampos/nvim-snippy'
+" Plug 'dcampos/cmp-snippy'
+" Plug 'joshdick/onedark.vim'
+" Plug 'OmniSharp/omnisharp-vim'
 call plug#end()
 
 " }}}
 " LSP {{{
 
-luafile ~/.config/nvim/lsp.lua
+" luafile ~/.config/nvim/lsp.lua
+" let g:OmniSharp_server_use_mono = 1
+" let g:OmniSharp_server_use_net6 = 1
 
 " }}}
 " NETRW SETTINGS {{{
@@ -461,6 +486,15 @@ nmap gs <plug>(swap-interactive)
 " WORDMOTION SETTINGS {{{
 
 let g:wordmotion_prefix = "<space>"
+" nmap div di<space>w
+" nmap civ ci<space>w
+" nmap yiv yi<space>w
+" nmap dav da<space>w
+" nmap cav ca<space>w
+" nmap yav ya<space>w
+" nmap dv d<space>w
+" nmap cv c<space>w
+" nmap yv y<space>w
 
 " }}}
 " TMUX NAVIGATOR SETTINGS {{{

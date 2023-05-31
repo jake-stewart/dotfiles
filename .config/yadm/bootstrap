@@ -94,8 +94,8 @@ install_brew() {
 
 install_brew_packages() {
     installing "brew packages"
-    brew install git cmake nvim lf karabiner-elements \
-        kitty tmux python ncurses automake autoconf gcc
+    brew install git cmake nvim lf karabiner-elements fd \
+        kitty tmux python ncurses automake autoconf gcc scdoc
     installed "brew packages"
 }
 
