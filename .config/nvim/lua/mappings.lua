@@ -1,3 +1,27 @@
+local function forceGoFile()
+    local fname = vim.fn.expand("<cfile>")
+    local path = vim.fn.expand("%:p:h") .. "/" .. fname
+    if vim.fn.filereadable(path) ~= 1 then
+        vim.cmd("silent! !touch " .. path)
+    end
+    vim.cmd.norm("gf")
+end
+
+vim.keymap.set("n", "<leader>gf", forceGoFile, {silent=true});
+
+local function scroll(direction)
+    local scrolloff = vim.o.scrolloff
+    vim.o.scrolloff = 999
+    vim.cmd.norm("10" .. direction)
+    vim.o.scrolloff = scrolloff
+end
+
+local function scrollUp() scroll("k") end
+vim.keymap.set("n", "<c-u>", scrollUp, {silent=true, noremap=true});
+
+local function scrollDown() scroll("j") end
+vim.keymap.set("n", "<c-d>", scrollDown, {silent=true, noremap=true});
+
 -- zero width space digraph
 vim.cmd.digraph("zs " .. 0x200b)
 
@@ -37,7 +61,7 @@ vim.keymap.set("v", "<leader>q", "zy:let @/='\\C\\V'.@z<CR>:set hls<CR>qq", {sil
 vim.keymap.set({"n", "v"}, "gh", "^")
 vim.keymap.set({"n", "v"}, "gl", "$")
 vim.keymap.set({"n", "v"}, "gm", "%")
-vim.keymap.set("n", "<c-p>", "<c-^>")
+-- vim.keymap.set("n", "<c-p>", "<c-^>")
 
 vim.keymap.set("n", "H", "H^")
 vim.keymap.set("n", "M", "M^")
@@ -58,6 +82,9 @@ vim.keymap.set("v", "gn", "\"zy:let @/='\\C'.@z<CR>:set hls<CR>", {silent=true})
 -- I center screen all the time, zz is slow and hurts my finger
 vim.keymap.set("n", "gb", "zz")
 
+vim.keymap.set("n", "<c-o>", "<c-o>zz", {noremap=true})
+vim.keymap.set("n", "<c-i>", "<c-i>zz", {noremap=true})
+
 vim.keymap.set("n", "<leader>s", "1z=")
 
 -- dd, yy, cc, etc all take too long since the same key is pressed twice
@@ -66,39 +93,30 @@ vim.keymap.set("o", "l", "_")
 vim.keymap.set("o", "c", "l")
 
 -- jump words skipping symbols with ctrl
-vim.keymap.set("n", 
-    "<c-w>",
+vim.keymap.set(
+    "n", "<c-w>",
     ':call search("[a-zA-Z0-9_]\\\\@=\\\\<", "z")<CR>',
     {silent=true}
 )
-vim.keymap.set("n", 
-    "<c-b>",
+vim.keymap.set(
+    "n", "<c-b>",
     ':call search("[a-zA-Z0-9_]\\\\@=\\\\<", "b")<CR>',
     {silent=true}
 )
-vim.keymap.set("n",
-    "<c-e>",
+vim.keymap.set(
+    "n", "<c-e>",
     ':call search("[a-zA-Z0-9_]\\\\>", "z")<CR>',
     {silent=true}
 )
 
+-- make l open fold even if at EOL
+vim.keymap.set(
+    "n", "l", ":silent! norm zo<CR>l",
+    {silent=true, noremap=true}
+)
+
 vim.keymap.set("n", "<leader>i", "~hi");
 vim.keymap.set("v", "<leader>i", "~gvI");
--- function fullyJumpIn()
---     local path = vim.fn.expand("%:h")
---     while (true) do
---         vim.cmd.norm("<c-i>")
---         if (vim.fn.expand("%:h") ~= path) then
---             break
---         end
---     end
--- end
-
--- function fullyJumpOut()
--- end
-
--- vim.keymap.set("n", "<leader>i", fullyJumpIn)
--- vim.keymap.set("n", "<leader>o", fullyJumpOut)
 
 vim.keymap.set("v", "<c-w>", "<esc><c-w>mzgv`z", {silent=true, noremap=false});
 vim.keymap.set("v", "<c-b>", "<esc><c-b>mzgv`z", {silent=true, noremap=false});

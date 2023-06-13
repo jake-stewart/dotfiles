@@ -1,9 +1,9 @@
-let b:editTable = v:null
+let b:editObject = v:null
 
-augroup Tablescript
+augroup CustomMarkdown
   au!
   au BufWinEnter *.md call OnWinEnter()
-  au BufEnter *.tbl call OnTablescriptEnter()
+  au BufEnter *.tbl,*.gez call OnObjectSourceEnter()
 augroup END
 
 let b:linkRegex = '^\s*([a-zA-Z0-9.,_\/ -]*)\[[a-zA-Z0-9._\/ -]\+\]$'
@@ -13,8 +13,9 @@ nnoremap <silent><buffer><enter> :call OpenLink(line('.'))<CR>
 nnoremap <silent><buffer><tab> :call JumpNextLink()<CR>
 nnoremap <silent><buffer><s-tab> :call JumpPrevLink()<CR>
 
-nnoremap <silent><buffer><leader>tt :call CreateTable()<CR>
-nnoremap <silent><buffer><leader>tp :call CreatePage()<CR>
+nnoremap <silent><buffer><leader>tt :call g:Table.new().create(input("Table Name: "))<CR>
+nnoremap <silent><buffer><leader>tp :call g:Page.new().create(input("Page Name: "))<CR>
+nnoremap <silent><buffer><leader>tg :call g:Graph.new().create(input("Graph Name: "))<CR>
 nnoremap <silent><buffer><leader>tr :call RenameObject(line('.'))<CR>
 nnoremap <silent><buffer><leader>td :call DeleteObject(line('.'))<CR>
 nnoremap <silent><buffer><leader>tm :call MoveObject(line('.'))<CR>
@@ -127,7 +128,7 @@ function! g:Page.move(newParent)
     let self.parent = l:newParent
     exe 'edit ' . self.parent . '/index.md'
     let self.line = line('$')
-    call self.draw()
+    silent call self.draw()
     write
 endfunction
 
@@ -149,7 +150,7 @@ function! g:Page.rename(newName)
     let self.path = l:newPath
     let self.name = a:newName
     let self.fileName = l:newName
-    call self.draw()
+    silent call self.draw()
     write
 endfunction
 
@@ -167,7 +168,7 @@ function g:Page.create(name)
         return v:false
     endif
     call system('mkdir -p "' . self.path . '"')
-    call self.draw()
+    silent call self.draw()
     write
     exe 'edit ' . self.path . "/index.md"
     exe 'norm i' . self.name
@@ -176,58 +177,58 @@ function g:Page.create(name)
     write
 endfunction
 
-let g:Table = {}
+let g:BlockObject = {}
 
-function g:Table.new()
-    let l:newTable = copy(self)
-    return l:newTable
+function g:BlockObject.new()
+    let l:newBlockObject = copy(self)
+    return l:newBlockObject
 endfunction
 
-function g:Table.edit()
-    let b:editTable = self
+function g:BlockObject.edit()
+    let b:editObject = self
     exe 'edit ' . self.path
+    norm zz
 endfunction
 
-function g:Table.erase()
+function g:BlockObject.erase()
     exe ':' . self.start . ',' . self.end . 'd'
 endfunction
 
-function g:Table.draw()
+function g:BlockObject.draw()
     call cursor(self.start, 1)
     exe "norm " . (self.start >= line('$') ? 'o' : 'O')
     exe self.start . "!echo -e '```" . self.fileName . '\n\n```' . "'"
-    exe (self.start + 1) . '!tablescript ' . expand("%:p:h")
-                \ . '/' . self.fileName
+    exe (self.start + 1) . "!" . self.command(expand("%:p:h") . '/' . self.fileName)
     call cursor(self.start, 1)
 endfunction
 
-function g:Table.formatName(name)
+function g:BlockObject.formatName(name)
     let l:name = tolower(a:name)
     let l:name = substitute(l:name, "[^a-zA-Z0-9_]", "_", "g")
     return l:name
 endfunction
 
-function g:Table.create(name)
+function g:BlockObject.create(name)
     let l:name = self.formatName(a:name)
     if strlen(l:name) == 0
         redraw
-        echo "Invalid table name"
+        echo "Invalid " .. tolower(self.objectType) .. " name"
         return v:false
     endif
-    let self.fileName = l:name . ".tbl"
+    let self.fileName = l:name . "." . self.extension
     let self.path = expand("%:p:h") . "/" . self.fileName
     if filereadable(self.path)
         redraw
-        echo "Table already exists"
+        echo self.objectType .. " already exists"
         return v:false
     endif
     let self.start = line('.')
     let self.end = line('.')
     call system("touch '" . self.path . "'")
-    call self.draw()
+    silent call self.draw()
 endfunction
 
-function g:Table.deleteBuffer()
+function g:BlockObject.deleteBuffer()
     let l:bufnr = bufnr(self.fileName)
     if bufnr != -1
         try
@@ -237,14 +238,14 @@ function g:Table.deleteBuffer()
     endif
 endfunction
 
-function g:Table.delete()
+function g:BlockObject.delete()
     call self.erase()
     call self.deleteBuffer()
     call system('rm -rf "$HOME/.cache/notes-bin/' . self.fileName . '"')
     call system("mv '" . self.path . "' ~/.cache/notes-bin")
 endfunction
 
-function! g:Table.move(newParent)
+function! g:BlockObject.move(newParent)
     let l:newParent = tolower(a:newParent)
     let l:newParent = substitute(l:newParent, "[^a-zA-Z0-9_/.]", "_", "g")
     if strlen(l:newParent) == 0
@@ -269,32 +270,32 @@ function! g:Table.move(newParent)
     let self.path = l:newPath
     exe 'edit ' . l:newParent . '/index.md'
     let self.start = line('$')
-    call self.draw()
+    silent call self.draw()
     write
 endfunction
 
-function g:Table.rename(newName)
+function g:BlockObject.rename(newName)
     let l:newName = self.formatName(a:newName)
     if strlen(l:newName) == 0
         return v:false
     endif
-    let l:newfileName = a:newName . ".tbl"
+    let l:newfileName = a:newName . "." . self.extension
     let l:newPath = expand("%:p:h") . "/" . l:newfileName
     if filereadable(l:newPath)
         redraw
-        echo "Table already exists"
+        echo self.objectType .. " already exists"
         return v:false
     endif
     call system("mv '" . self.path . "' '" . l:newPath . "'")
     let self.path = l:newPath
     let self.fileName = l:newfileName
     call self.erase()
-    call self.draw()
+    silent call self.draw()
     call self.deleteBuffer()
     return v:true
 endfunction
 
-function g:Table.parse(line)
+function g:BlockObject.parse(line)
     let l:line = a:line
 
     let l:end = -1
@@ -304,10 +305,12 @@ function g:Table.parse(line)
         let l:line -= 1
     endif
 
+    let l:regex = "^```[A-Za-z0-9_]*." . self.extension . "$"
+
     while l:line > 0
         let l:lineContent = getline(l:line)
         if l:lineContent =~ '^\s*```'
-            if l:lineContent =~ "^```[A-Za-z0-9_]*.tbl$"
+            if l:lineContent =~ l:regex
                 let l:fileName = substitute(l:lineContent, "```", "", "")
                 break
             endif
@@ -343,6 +346,26 @@ function g:Table.parse(line)
     let self.start = l:start
     let self.end = l:end
     return v:true
+endfunction
+
+let g:Table = copy(g:BlockObject)
+let g:Table.objectType = "Table"
+let g:Table.extension = "tbl"
+function g:Table.command(filePath)
+    return "tablescript '" . a:filePath . "'"
+endfunction
+
+let g:Graph = copy(g:BlockObject)
+let g:Table.objectType = "Graph"
+let g:Graph.extension = "gez"
+function g:Graph.command(filePath)
+    return "graph-easy --as boxart '" . a:filePath . "' | sed '/^$/d'"
+endfunction
+
+function! CreateGraph()
+    let l:name = input("Graph Name: ")
+    let l:graph = g:Graph.new()
+    call l:graph.create(l:name)
 endfunction
 
 function! CreateTable()
@@ -392,6 +415,10 @@ function! ParseCursorObject()
     if l:object.parse(line('.'))
         return l:object
     endif
+    let l:object = g:Graph.new()
+    if l:object.parse(line('.'))
+        return l:object
+    endif
     return v:null
 endfunction
 
@@ -425,7 +452,7 @@ endfunction
 
 function! OpenLink(line)
     let l:object = ParseCursorObject()
-    if type(l:object) == v:null
+    if type(l:object) == type(v:null)
         echo "Not an object"
         return
     endif
@@ -434,21 +461,21 @@ function! OpenLink(line)
 endfunction
 
 function! OnWinEnter()
-    if type(b:editTable) != v:t_dict
+    if type(b:editObject) != v:t_dict
         return
     endif
-    call b:editTable.erase()
-    call b:editTable.draw()
+    call b:editObject.erase()
+    silent call b:editObject.draw()
     write
     normal! zz
-    let b:editTable = v:null
+    let b:editObject = v:null
 endfunction
 
-function! TablescriptBacklink()
+function! ObjectSourceBacklink()
     write
     exe "norm \<c-6>"
 endfunction
 
-function! OnTablescriptEnter()
-    nnoremap <silent><buffer><backspace> :call TablescriptBacklink()<CR>
+function! OnObjectSourceEnter()
+    nnoremap <silent><buffer><backspace> :call ObjectSourceBacklink()<CR>
 endfunction

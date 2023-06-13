@@ -190,6 +190,9 @@ math() {
     python3 -c "print($1)"
 }
 
+sq="('([^']|(\\\\'))*')"
+dq='("([^"]|(\\"))*")'
+fs='(/([^/]|(\\/))*/)'
 accept-line-math () {
     if [[ "$BUFFER" =~ "^[0-9()].*" ]]; then
         echo

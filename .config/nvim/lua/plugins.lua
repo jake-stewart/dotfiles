@@ -3,119 +3,224 @@ local autocmd = vim.api.nvim_create_autocmd
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
-  vim.fn.system({
-    "git",
-    "clone",
-    "--filter=blob:none",
-    "https://github.com/folke/lazy.nvim.git",
-    "--branch=stable", -- latest stable release
-    lazypath,
-  })
+    vim.fn.system({
+        "git",
+        "clone",
+        "--filter=blob:none",
+        "https://github.com/folke/lazy.nvim.git",
+        "--branch=stable", -- latest stable release
+        lazypath,
+    })
 end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
     {
-        'dstein64/vim-startuptime',
+        "jake-stewart/slide.vim",
+        keys = {
+            {"<leader>j"},
+            {"<leader>k"},
+            {"<leader>J"},
+            {"<leader>K"}
+        },
     },
-    {
-        "mfussenegger/nvim-dap",
 
-        config = function()
-            local dap = require("dap")
-            vim.keymap.set('n', '<leader>db', dap.toggle_breakpoint, {})
-            vim.keymap.set('n', '<leader>dc', dap.continue, {})
-            vim.keymap.set('n', '<leader>do', dap.step_over, {})
-            vim.keymap.set('n', '<leader>di', dap.step_into, {})
-            vim.keymap.set('n', '<leader>dr', dap.repl.open, {})
-            -- require'dap'.toggle_breakpoint().
-            -- require'dap'.continue().
-            -- require'dap'.step_over()
-            -- require'dap'.step_into().
-            -- require'dap'.repl.open()
-        end
-    },
     {
-        "mfussenegger/nvim-dap-python",
-        dependencies = {"mfussenegger/nvim-dap"},
-        config = function()
-            require('dap-python').setup('~/.virtualenvs/debugpy/bin/python')
-        end
+        'nvim-telescope/telescope.nvim',
+        tag = '0.1.1',
+        dependencies = { 'nvim-lua/plenary.nvim' }
     },
+
     {
-        "rcarriga/nvim-dap-ui",
+        'nvim-telescope/telescope-fzf-native.nvim',
+        build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build',
         config = function()
-            local dap, dapui = require("dap"), require("dapui")
-            dapui.setup()
-            dap.listeners.after.event_initialized["dapui_config"] = function()
-              dapui.open()
-            end
-            dap.listeners.before.event_terminated["dapui_config"] = function()
-              dapui.close()
-            end
-            dap.listeners.before.event_exited["dapui_config"] = function()
-              dapui.close()
-            end
+            require('telescope').setup {
+                extensions = {
+                    fzf = {
+                        fuzzy = true,
+                        override_generic_sorter = true,
+                        override_file_sorter = true,
+                        case_mode = "smart_case",
+                    }
+                }
+            }
+            require('telescope').load_extension('fzf')
         end
     },
+
+    {
+        "jake-stewart/filestack.vim",
+        keys = {
+            { "<m-o>" },
+            { "<m-i>" },
+            { "<c-p>" },
+        },
+        config = function()
+            local opts = { silent = true }
+            vim.keymap.set('n', '<m-o>', vim.fn.FilestackBack, opts)
+            vim.keymap.set('n', '<m-i>', vim.fn.FilestackForward, opts)
+
+            vim.cmd [[
+                function! FilestackAlternateFile()
+                    let [l:jumplist, l:pos] = getjumplist()
+                    if l:pos >= len(l:jumplist) - 1
+                        call FilestackBack()
+                    else
+                        call FilestackForward()
+                    endif
+                endfunction
+            ]]
+            vim.keymap.set('n', '<c-p>', vim.fn.FilestackAlternateFile, opts)
+        end
+    },
+
+
+    {
+        "jake-stewart/jfind.nvim", branch = "1.0",
+        keys = {
+            {"<c-f>", function()
+                local Key = require("jfind.key")
+                require("jfind").findFile({
+                    formatPaths = true,
+                    callback = {
+                        [Key.DEFAULT] = vim.cmd.edit,
+                        [Key.CTRL_S] = vim.cmd.split,
+                        [Key.CTRL_V] = vim.cmd.vsplit,
+                    }
+                })
+            end},
+
+            -- {"<leader><c-f>", function()
+            --     local function get_buffers()
+            --         local buffers = {}
+            --         for i, buf_hndl in ipairs(vim.api.nvim_list_bufs()) do
+            --             if vim.api.nvim_buf_is_loaded(buf_hndl) then
+            --                 local path = vim.api.nvim_buf_get_name(buf_hndl)
+            --                 if path ~= nil and path ~= "" then
+            --                     buffers[i * 2 - 1] = require("jfind").formatPath(path)
+            --                     buffers[i * 2] = path
+            --                 end
+            --             end
+            --         end
+            --         return buffers
+            --     end
+
+            --     local Key = require("jfind.key")
+            --     local buffers = get_buffers()
+
+            --     require("jfind").jfind({
+            --         input = buffers,
+            --         hints = true,
+            --         callbackWrapper = function(callback, _, path)
+            --             callback(path)
+            --         end,
+            --         callback = {
+            --             [Key.DEFAULT] = vim.cmd.edit,
+            --             [Key.CTRL_S] = vim.cmd.split,
+            --             [Key.CTRL_V] = vim.cmd.vsplit,
+            --         }
+            --     })
+            -- end},
+
+            {"<leader><leader>s", function()
+                require("jfind").jfind({
+                    script = "~/test.sh",
+                    args = {20},
+                    callback = function(result)
+                        print("you picked: " .. result)
+                    end
+                })
+            end}
+
+        },
+        config = function()
+            require("jfind").setup({
+                exclude = {
+                    ".git",
+                    ".idea",
+                    ".vscode",
+                    ".sass-cache",
+                    ".class",
+                    "__pycache__",
+                    "node_modules",
+                    "target",
+                    "build",
+                    "tmp",
+                    "assets",
+                    "dist",
+                    "public",
+                    "*.iml",
+                    "*.meta"
+                },
+                border = "rounded",
+                formatPaths = true,
+                key = "<c-f>",
+                tmux = true,
+            });
+        end
+    },
+
     {
         'tpope/vim-repeat',
         keys = {
-            {"."},
+            { "." },
         },
     },
+
     {
         'tpope/vim-surround',
         keys = {
-            {"ys"},
-            {"ds"},
-            {"cs"},
+            { "ys" },
+            { "ds" },
+            { "cs" },
         },
     },
-    {
-        'jwalton512/vim-blade',
-        ft = "blade",
-    },
+
     {
         'christoomey/vim-tmux-navigator',
         keys = {
-            {"<m-h>", ":<C-U>TmuxNavigateLeft<cr>", mode = "n", silent = true},
-            {"<m-j>", ":<C-U>TmuxNavigateDown<cr>", mode = "n", silent = true},
-            {"<m-k>", ":<C-U>TmuxNavigateUp<cr>", mode = "n", silent = true},
-            {"<m-l>", ":<C-U>TmuxNavigateRight<cr>", mode = "n", silent = true},
-            {"<m-h>", ":<C-U>TmuxNavigateLeft<cr>gv", mode = "v", silent = true},
-            {"<m-j>", ":<C-U>TmuxNavigateDown<cr>gv", mode = "v", silent = true},
-            {"<m-k>", ":<C-U>TmuxNavigateUp<cr>gv", mode = "v", silent = true},
-            {"<m-l>", ":<C-U>TmuxNavigateRight<cr>gv", mode = "v", silent = true},
-            {"<m-h>", "<c-o>:<C-U>TmuxNavigateLeft<cr>", mode = "i", silent = true},
-            {"<m-j>", "<c-o>:<C-U>TmuxNavigateDown<cr>", mode = "i", silent = true},
-            {"<m-k>", "<c-o>:<C-U>TmuxNavigateUp<cr>", mode = "i", silent = true},
-            {"<m-l>", "<c-o>:<C-U>TmuxNavigateRight<cr>", mode = "i", silent = true},
+            { "<m-h>", ":<C-U>TmuxNavigateLeft<cr>",       mode = "n", silent = true },
+            { "<m-j>", ":<C-U>TmuxNavigateDown<cr>",       mode = "n", silent = true },
+            { "<m-k>", ":<C-U>TmuxNavigateUp<cr>",         mode = "n", silent = true },
+            { "<m-l>", ":<C-U>TmuxNavigateRight<cr>",      mode = "n", silent = true },
+            { "<m-h>", ":<C-U>TmuxNavigateLeft<cr>gv",     mode = "v", silent = true },
+            { "<m-j>", ":<C-U>TmuxNavigateDown<cr>gv",     mode = "v", silent = true },
+            { "<m-k>", ":<C-U>TmuxNavigateUp<cr>gv",       mode = "v", silent = true },
+            { "<m-l>", ":<C-U>TmuxNavigateRight<cr>gv",    mode = "v", silent = true },
+            { "<m-h>", "<c-o>:<C-U>TmuxNavigateLeft<cr>",  mode = "i", silent = true },
+            { "<m-j>", "<c-o>:<C-U>TmuxNavigateDown<cr>",  mode = "i", silent = true },
+            { "<m-k>", "<c-o>:<C-U>TmuxNavigateUp<cr>",    mode = "i", silent = true },
+            { "<m-l>", "<c-o>:<C-U>TmuxNavigateRight<cr>", mode = "i", silent = true },
         },
         init = function()
             vim.g.tmux_navigator_no_mappings = 1
         end
     },
+
     {
         'tpope/vim-commentary',
         keys = {
-            {"gc", mode = "n"},
-            {"gc", mode = "v"},
+            { "gc", mode = "n" },
+            { "gc", mode = "v" },
         },
     },
+
     {
         'tpope/vim-vinegar',
         keys = {
-            {"-"},
+            { "-" },
         },
     },
+
     {
         'tpope/vim-abolish',
         keys = {
-            {"cr"},
+            { "cr" },
         },
-        cmd = {"S", "Subvert"},
+        cmd = { "S", "Subvert" },
     },
+
     {
         'chaoren/vim-wordmotion',
         init = function()
@@ -126,15 +231,16 @@ require("lazy").setup({
             }
         end,
         keys = {
-            {"<space>", mode = "n"},
-            {"<space>", mode = "o"},
+            { "<space>", mode = "n" },
+            { "<space>", mode = "o" },
         },
     },
+
     {
         'andrewradev/splitjoin.vim',
         keys = {
-            {"gS"},
-            {"gJ"},
+            { "gS" },
+            { "gJ" },
         },
         init = function()
             vim.g.splitjoin_r_indent_align_args = 0
@@ -142,18 +248,19 @@ require("lazy").setup({
             vim.g.splitjoin_html_attributes_hanging = 1
         end
     },
+
     {
         'machakann/vim-swap',
         keys = {
-            {"gs", "<plug>(swap-interactive)"}
+            { "gs", "<plug>(swap-interactive)" }
         },
     },
+
     {
         'kevinhwang91/nvim-bqf',
         ft = "qf",
         config = function()
-
-            augroup("BqfCustomKeybinds", {clear=true})
+            augroup("BqfCustomKeybinds", { clear = true })
 
             -- remove auto commenting
             autocmd("FileType", {
@@ -161,7 +268,7 @@ require("lazy").setup({
                 group = "BqfCustomKeybinds",
                 callback = function()
                     vim.keymap.set('n', '<esc>', ":q<CR>",
-                        {silent=true, buffer=true})
+                        { silent = true, buffer = true })
                 end
             })
 
@@ -180,48 +287,54 @@ require("lazy").setup({
             })
         end
     },
+
     {
         'kana/vim-textobj-entire',
-        dependencies = {'kana/vim-textobj-user'},
+        dependencies = { 'kana/vim-textobj-user' },
         keys = {
-            {"ae", mode = "o"},
-            {"ie", mode = "o"},
+            { "ae", mode = "o" },
+            { "ie", mode = "o" },
         },
     },
+
     {
         'kana/vim-textobj-line',
-        dependencies = {'kana/vim-textobj-user'},
+        dependencies = { 'kana/vim-textobj-user' },
         keys = {
-            {"al", mode = "o"},
-            {"il", mode = "o"},
+            { "al", mode = "o" },
+            { "il", mode = "o" },
         },
     },
+
     {
         'glts/vim-textobj-comment',
-        dependencies = {'kana/vim-textobj-user'},
+        dependencies = { 'kana/vim-textobj-user' },
         keys = {
-            {"ic", mode = "o"},
-            {"ac", mode = "o"},
+            { "ic", mode = "o" },
+            { "ac", mode = "o" },
         }
     },
+
     {
         'michaeljsmith/vim-indent-object',
-        dependencies = {'kana/vim-textobj-user'},
+        dependencies = { 'kana/vim-textobj-user' },
         keys = {
-            {"ii", mode = "o"},
-            {"ai", mode = "o"},
+            { "ii", mode = "o" },
+            { "ai", mode = "o" },
         },
     },
+
     {
         'junegunn/vim-easy-align',
         keys = {
-            {"<leader>a", "<plug>(EasyAlign)", mode = "v"},
-            {"<leader>a", "<plug>(EasyAlign)", mode = "n"},
+            { "<leader>a", "<plug>(EasyAlign)", mode = "v" },
+            { "<leader>a", "<plug>(EasyAlign)", mode = "n" },
         },
     },
+
     {
         'neovim/nvim-lspconfig',
-        dependencies = {'hrsh7th/nvim-cmp'},
+        dependencies = { 'hrsh7th/nvim-cmp' },
         ft = {
             -- "cs",
             "cpp",
@@ -238,17 +351,18 @@ require("lazy").setup({
             local capabilities = require('cmp_nvim_lsp').default_capabilities()
             capabilities.textDocument.completion.completionItem.snippetSupport = false
             local on_attach = function(client, bufnr)
+                client.server_capabilities.semanticTokensProvider = nil;
                 local bufopts = { noremap = true, silent = true, buffer = bufnr }
                 vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
                 vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
                 vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
                 vim.keymap.set('n', 'gy', vim.lsp.buf.type_definition, bufopts)
                 vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
-                vim.keymap.set('n', 'K',  vim.lsp.buf.hover, bufopts)
+                vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
                 vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, bufopts)
                 vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, bufopts)
                 vim.keymap.set('n', '<c-k>', function()
-                    vim.diagnostic.open_float(nil, {focusable = false})
+                    vim.diagnostic.open_float(nil, { focusable = false })
                 end, bufopts)
             end
 
@@ -281,9 +395,9 @@ require("lazy").setup({
             --     capabilities = capabilities,
             --     on_attach = on_attach
             -- })
-
         end,
     },
+
     {
         'hrsh7th/nvim-cmp',
         dependencies = {
@@ -340,8 +454,8 @@ require("lazy").setup({
                         { name = 'nvim_lsp' },
                         { name = 'vsnip' }
                     },
-                    {{ name = 'buffer' }},
-                    {{ name = 'nvim_lsp_signature_help' }}
+                    { { name = 'buffer' } },
+                    { { name = 'nvim_lsp_signature_help' } }
                 ),
                 formatting = {
                     format = function(entry, vim_item)
@@ -352,30 +466,17 @@ require("lazy").setup({
                     end
                 },
                 snippet = {
-                  expand = function(args)
-                    vim.fn["vsnip#anonymous"](args.body)
-                  end,
+                    expand = function(args)
+                        vim.fn["vsnip#anonymous"](args.body)
+                    end,
                 }
             })
         end
     },
-    {
-        "kwkarlwang/bufjump.nvim",
-        enabled = false,
-        keys = {
-            {"<c-n>", "<c-p>"},
-        },
-        config = function()
-            require("bufjump").setup({
-                forward = "<C-n>",
-                backward = "<C-p>",
-                on_success = nil
-            })
-        end,
-    },
+
     {
         'nvim-treesitter/nvim-treesitter',
-        ft = {"c", "lua", "php", "cpp", "javascript", "typescript", "cs"},
+        ft = { "c", "lua", "php", "cpp", "javascript", "typescript", "cs" },
         config = function()
             require('nvim-treesitter.configs').setup({
                 ensure_installed = {
@@ -405,9 +506,10 @@ require("lazy").setup({
             })
         end,
     },
+
     {
         'Hoffs/omnisharp-extended-lsp.nvim',
-        dependencies = {'neovim/nvim-lspconfig', 'hrsh7th/nvim-cmp'},
+        dependencies = { 'neovim/nvim-lspconfig', 'hrsh7th/nvim-cmp' },
         ft = "cs",
         config = function()
             local capabilities = require('cmp_nvim_lsp').default_capabilities()
@@ -419,11 +521,11 @@ require("lazy").setup({
                 vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
                 vim.keymap.set('n', 'gy', vim.lsp.buf.type_definition, bufopts)
                 vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
-                vim.keymap.set('n', 'K',  vim.lsp.buf.hover, bufopts)
+                vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
                 vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, bufopts)
                 vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, bufopts)
                 vim.keymap.set('n', '<c-k>', function()
-                    vim.diagnostic.open_float(nil, {focusable = false})
+                    vim.diagnostic.open_float(nil, { focusable = false })
                 end, bufopts)
             end
 
@@ -449,7 +551,7 @@ require("lazy").setup({
                 analyze_open_documents_only = false,
                 capabilities = capabilities,
                 on_attach = function(client, bufnr)
-                  if client.name == "omnisharp" then
+                    if client.name == "omnisharp" then
                         client.server_capabilities.semanticTokensProvider = {
                             full = vim.empty_dict(),
                             legend = {
@@ -530,8 +632,25 @@ require("lazy").setup({
             })
         end,
     },
+
     {
         'nvim-treesitter/playground',
         enabled = false,
     },
+},
+{
+    performance = {
+        rtp = {
+            disabled_plugins = {
+                "gzip",
+                "netrwPlugin",
+                "tarPlugin",
+                "tohtml",
+                "tutor",
+                "zipPlugin",
+                -- "matchit",
+                -- "matchparen",
+            },
+        },
+    }
 });
