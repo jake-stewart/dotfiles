@@ -6,7 +6,7 @@ augroup CustomMarkdown
   au BufEnter *.tbl,*.gez call OnObjectSourceEnter()
 augroup END
 
-let b:linkRegex = '^\s*([a-zA-Z0-9.,_\/ -]*)\[[a-zA-Z0-9._\/ -]\+\]$'
+let b:linkRegex = '^\s*\[[^\[\]]*\]([a-zA-Z0-9._\/ -]\+)$'
 
 nnoremap <silent><buffer><backspace> :call BackLink()<CR>
 nnoremap <silent><buffer><enter> :call OpenLink(line('.'))<CR>
@@ -39,15 +39,15 @@ endfunction
 
 function g:Page.parse(line)
     let l:lineContent = getline(a:line)
-    if l:lineContent !~ '^([a-zA-Z0-9.,_\/ -]*)\[[a-zA-Z0-9._\/ -]\+\]$'
+    if l:lineContent !~ b:linkRegex
         return v:false
     endif
-    let l:directory = substitute(l:lineContent, '^(.*)', "", "g")
-    let l:directory = substitute(l:directory, '[\[\]]', "", "g")
-    let l:directory = substitute(l:directory, "\/index.md$", "", "")
+    let l:directory = substitute(l:lineContent, '^\s*\[.*\]', "", "g")
+    let l:directory = substitute(l:directory, '[()]', "", "g")
+    let l:directory = substitute(l:directory, '\/index.md$', "", "")
 
-    let l:name = substitute(l:lineContent, '\[.*\]', "", "g")
-    let l:name = substitute(l:name, '[()]', "", "g")
+    let l:name = substitute(l:lineContent, '(.*)', "", "g")
+    let l:name = substitute(l:name, '\(\s*\[\|\]$\)', "", "g")
 
     if strlen(l:directory) == 0
         return v:false
@@ -70,15 +70,18 @@ endfunction
 
 function g:Page.formatName(name)
     let l:name = tolower(a:name)
-    let l:name = substitute(l:name, "[^a-zA-Z0-9_-]", "_", "g")
+    let l:name = substitute(l:name, "+", "p", "g")
+    let l:name = substitute(l:name, "&", "and", "g")
+    let l:name = substitute(l:name, '\s', "_", "g")
+    let l:name = substitute(l:name, "[^a-zA-Z0-9_-]", "", "g")
     return l:name
 endfunction
 
 function g:Page.draw()
     call cursor(self.line, 1)
     exe "norm " . (self.line >= line('$') ? 'o' : 'O')
-                \ . '(' . self.name . ')[' . self.fileName
-                \ . '/index.md]'
+                \ . '[' . self.name . '](' . self.fileName
+                \ . '/index.md)'
 endfunction
 
 function! g:Page.erase()
@@ -204,7 +207,10 @@ endfunction
 
 function g:BlockObject.formatName(name)
     let l:name = tolower(a:name)
-    let l:name = substitute(l:name, "[^a-zA-Z0-9_]", "_", "g")
+    let l:name = substitute(l:name, "+", "p", "g")
+    let l:name = substitute(l:name, "&", "and", "g")
+    let l:name = substitute(l:name, '\s', "_", "g")
+    let l:name = substitute(l:name, "[^a-zA-Z0-9_-]", "", "g")
     return l:name
 endfunction
 

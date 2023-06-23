@@ -16,38 +16,67 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
     {
+        'junegunn/fzf'
+    },
+
+    {
+        'junegunn/fzf.vim'
+    },
+
+    {
+        "jake-stewart/normon.nvim",
+        keys = {
+            {"<leader>n", mode = {"n", "v"}},
+            {"<leader>N", mode = {"n", "v"}},
+            {"<leader>q", mode = {"n", "v"}},
+            {"<leader>Q", mdoe = {"n", "v"}},
+            {"*", mode = {"n", "v"}},
+            {"#", mode = {"n", "v"}}
+        },
+        config = function()
+            local normon = require("normon")
+            normon("<leader>n", "cgn")
+            normon("<leader>N", "cgN")
+            normon("<leader>q", "qq")
+            normon("<leader>Q", "qq", {backward = true})
+            normon("*", "n", {clearSearch = true})
+            normon("#", "n", {backward = true, clearSearch = true})
+        end
+    },
+
+    {
         "jake-stewart/slide.vim",
         keys = {
-            {"<leader>j"},
-            {"<leader>k"},
-            {"<leader>J"},
-            {"<leader>K"}
+            {"<leader>j", mode={"n", "v"}},
+            {"<leader>k", mode={"n", "v"}},
+            {"<leader>J", mode={"n", "v"}},
+            {"<leader>K", mode={"n", "v"}},
         },
     },
 
-    {
-        'nvim-telescope/telescope.nvim',
-        tag = '0.1.1',
-        dependencies = { 'nvim-lua/plenary.nvim' }
-    },
+    -- {
+    --     'nvim-telescope/telescope.nvim',
+    --     tag = '0.1.1',
+    --     dependencies = { 'nvim-lua/plenary.nvim' }
+    -- },
 
-    {
-        'nvim-telescope/telescope-fzf-native.nvim',
-        build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build',
-        config = function()
-            require('telescope').setup {
-                extensions = {
-                    fzf = {
-                        fuzzy = true,
-                        override_generic_sorter = true,
-                        override_file_sorter = true,
-                        case_mode = "smart_case",
-                    }
-                }
-            }
-            require('telescope').load_extension('fzf')
-        end
-    },
+    -- {
+    --     'nvim-telescope/telescope-fzf-native.nvim',
+    --     build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build',
+    --     config = function()
+    --         require('telescope').setup {
+    --             extensions = {
+    --                 fzf = {
+    --                     fuzzy = true,
+    --                     override_generic_sorter = true,
+    --                     override_file_sorter = true,
+    --                     case_mode = "smart_case",
+    --                 }
+    --             }
+    --         }
+    --         require('telescope').load_extension('fzf')
+    --     end
+    -- },
 
     {
         "jake-stewart/filestack.vim",
@@ -83,55 +112,29 @@ require("lazy").setup({
                 local Key = require("jfind.key")
                 require("jfind").findFile({
                     formatPaths = true,
+                    hidden = true,
                     callback = {
                         [Key.DEFAULT] = vim.cmd.edit,
-                        [Key.CTRL_S] = vim.cmd.split,
-                        [Key.CTRL_V] = vim.cmd.vsplit,
+                        [Key.CTRL_B] = vim.cmd.split,
+                        [Key.CTRL_N] = vim.cmd.vsplit,
                     }
                 })
             end},
 
-            -- {"<leader><c-f>", function()
-            --     local function get_buffers()
-            --         local buffers = {}
-            --         for i, buf_hndl in ipairs(vim.api.nvim_list_bufs()) do
-            --             if vim.api.nvim_buf_is_loaded(buf_hndl) then
-            --                 local path = vim.api.nvim_buf_get_name(buf_hndl)
-            --                 if path ~= nil and path ~= "" then
-            --                     buffers[i * 2 - 1] = require("jfind").formatPath(path)
-            --                     buffers[i * 2] = path
-            --                 end
-            --             end
-            --         end
-            --         return buffers
-            --     end
-
-            --     local Key = require("jfind.key")
-            --     local buffers = get_buffers()
-
-            --     require("jfind").jfind({
-            --         input = buffers,
-            --         hints = true,
-            --         callbackWrapper = function(callback, _, path)
-            --             callback(path)
-            --         end,
-            --         callback = {
-            --             [Key.DEFAULT] = vim.cmd.edit,
-            --             [Key.CTRL_S] = vim.cmd.split,
-            --             [Key.CTRL_V] = vim.cmd.vsplit,
-            --         }
-            --     })
-            -- end},
-
-            {"<leader><leader>s", function()
-                require("jfind").jfind({
-                    script = "~/test.sh",
-                    args = {20},
-                    callback = function(result)
-                        print("you picked: " .. result)
-                    end
+            {"<leader><c-f>", function()
+                local jfind = require("jfind")
+                local Key = require("jfind.key")
+                jfind.liveGrep({
+                    exclude = {},
+                    hidden = true,
+                    caseSensitivity = "smart",
+                    callback = {
+                        [Key.DEFAULT] = jfind.editGotoLine,
+                        [Key.CTRL_B] = jfind.splitGotoLine,
+                        [Key.CTRL_N] = jfind.vsplitGotoLine,
+                    }
                 })
-            end}
+            end},
 
         },
         config = function()
@@ -154,7 +157,6 @@ require("lazy").setup({
                     "*.meta"
                 },
                 border = "rounded",
-                formatPaths = true,
                 key = "<c-f>",
                 tmux = true,
             });
@@ -225,14 +227,16 @@ require("lazy").setup({
         'chaoren/vim-wordmotion',
         init = function()
             vim.g.wordmotion_mappings = {
-                w = "<t>",
-                b = "<c-t>",
-                e = "",
+                w = "<c-w>",
+                b = "<c-b>",
+                e = "<c-e>",
             }
         end,
         keys = {
-            { "<space>", mode = "n" },
-            { "<space>", mode = "o" },
+            { "<c-w>", mode = {"n", "x", "o"} },
+            { "<c-b>", mode = {"n", "x", "o"} },
+            { "<c-e>", mode = {"n", "x", "o"} },
+            { "<space>", "<c-w>", mode = "o", remap=true },
         },
     },
 
@@ -350,9 +354,10 @@ require("lazy").setup({
         config = function()
             local capabilities = require('cmp_nvim_lsp').default_capabilities()
             capabilities.textDocument.completion.completionItem.snippetSupport = false
-            local on_attach = function(client, bufnr)
+
+            local on_attach = function(client, bufnr, opts)
                 client.server_capabilities.semanticTokensProvider = nil;
-                local bufopts = { noremap = true, silent = true, buffer = bufnr }
+                local bufopts = { remap = false, silent = true, buffer = bufnr }
                 vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
                 vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
                 vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
@@ -364,37 +369,28 @@ require("lazy").setup({
                 vim.keymap.set('n', '<c-k>', function()
                     vim.diagnostic.open_float(nil, { focusable = false })
                 end, bufopts)
+
+                if opts.commentstring then
+                    vim.cmd.setlocal("commentstring=" .. opts.commentstring)
+                end
             end
 
-            local lsp_setup = {
-                capabilities = capabilities,
-                on_attach = on_attach,
-            }
+            local function setup(server, opts)
+                require('lspconfig')[server].setup({
+                    capabilities = capabilities,
+                    on_attach = function(client, bufnr)
+                        on_attach(client, bufnr, opts)
+                    end
+                })
+            end
 
-            local clangd_setup = {
-                capabilities = capabilities,
-                on_attach = on_attach,
-                settings = {
-                    IndentWidth = 4,
-                    IndentAccessModifiers = true
-                }
-            }
-
-            require('lspconfig').clangd.setup(clangd_setup)
-            require('lspconfig').jdtls.setup(lsp_setup)
-            require('lspconfig').pyright.setup(lsp_setup)
-            require('lspconfig').tsserver.setup(lsp_setup)
-            require('lspconfig').intelephense.setup(lsp_setup)
-            require('lspconfig').tsserver.setup(lsp_setup)
-            require('lspconfig').lua_ls.setup(lsp_setup)
-
-            -- require('lspconfig').csharp_ls.setup({
-            --     handlers = {
-            --         ["textDocument/definition"] = require('csharpls_extended').handler,
-            --     },
-            --     capabilities = capabilities,
-            --     on_attach = on_attach
-            -- })
+            local cStyleComment = { commentstring = "//\\ %s" }
+            setup("clangd", cStyleComment)
+            setup("jdtls", cStyleComment)
+            setup("tsserver", cStyleComment)
+            setup("intelephense", cStyleComment)
+            setup("lua_ls", {})
+            setup("pyright", {})
         end,
     },
 
@@ -449,6 +445,14 @@ require("lazy").setup({
                 mapping = cmp.mapping.preset.insert({
                     ['<C-K>'] = cmp.mapping.confirm({ select = false }),
                 }),
+               Window = {
+                    completion = cmp.config.window.bordered({
+                      winhighlight = "Normal:CmpPmenu,CursorLine:CursorLine,Search:None",
+                    }),
+                    documentation = cmp.config.window.bordered({
+                      winhighlight = "Normal:CmpPmenu,CursorLine:CursorLine,Search:None",
+                    }),
+                },
                 sources = cmp.config.sources(
                     {
                         { name = 'nvim_lsp' },
@@ -515,7 +519,7 @@ require("lazy").setup({
             local capabilities = require('cmp_nvim_lsp').default_capabilities()
             capabilities.textDocument.completion.completionItem.snippetSupport = false
             local on_attach = function(client, bufnr)
-                local bufopts = { noremap = true, silent = true, buffer = bufnr }
+                local bufopts = { remap = false, silent = true, buffer = bufnr }
                 vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
                 vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
                 vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)

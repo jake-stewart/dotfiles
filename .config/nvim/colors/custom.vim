@@ -22,6 +22,7 @@ let s:green  = "darkgreen"
 let s:yellow = "yellow"
 let s:blue   = "darkblue"
 let s:purple = "darkmagenta"
+let s:grey   = "gray"
 
 let s:grey_0 = "233"
 let s:grey_1 = "234"
@@ -80,7 +81,7 @@ call HL("DiffChange",               s:yellow, "NONE",   "BOLD")
 call HL("DiffText",                 s:bg,     s:fg,     "NONE")
 call HL("Underlined",               "NONE",   "NONE",   "UNDERLINE")
 call HL("OperatorSandwichChange",   "NONE",   s:purple, "NONE")
-call HL("Comment",                  s:grey_6, "NONE",   "ITALIC")
+call HL("Comment",                  s:grey,   "NONE",   "ITALIC")
 call HL("Exception",                s:cyan,   "NONE",   "NONE")
 call HL("Constant",                 s:cyan,   "NONE",   "NONE")
 call HL("Float",                    s:orange, "NONE",   "NONE")

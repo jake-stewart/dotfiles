@@ -31,7 +31,7 @@ autocmd("FileType", {
     pattern = "c,cpp,cs,java,php",
     group = "NvimCustomAutocommands",
     callback = function()
-        vim.cmd [[ setlocal commentstring=//\ %s ]]
+        vim.cmd.setlocal("commentstring=//\\ %s")
     end
 })
 
@@ -40,13 +40,13 @@ autocmd("BufNewFile", {
     pattern = "*.tbl",
     group = "NvimCustomAutocommands",
     callback = function()
-        vim.cmd [[ setf tablescript ]]
+        vim.cmd.setf("tablescript")
     end
 })
 autocmd("BufRead", {
     pattern = "*.tbl",
     group = "NvimCustomAutocommands",
     callback = function()
-        vim.cmd [[ setf tablescript ]]
+        vim.cmd.setf("tablescript")
     end
 })

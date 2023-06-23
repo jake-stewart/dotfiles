@@ -16,74 +16,46 @@ local function scroll(direction)
     vim.o.scrolloff = scrolloff
 end
 
-local function scrollUp() scroll("k") end
-vim.keymap.set("n", "<c-u>", scrollUp, {silent=true, noremap=true});
-
-local function scrollDown() scroll("j") end
-vim.keymap.set("n", "<c-d>", scrollDown, {silent=true, noremap=true});
+vim.keymap.set("n", "<c-u>", function() scroll("k") end);
+vim.keymap.set("n", "<c-d>", function() scroll("j") end);
 
 -- zero width space digraph
 vim.cmd.digraph("zs " .. 0x200b)
 
--- toggle cursor column
-vim.keymap.set("n", "<leader>cc", ":let &cuc = !&cuc<cr>", {silent=true})
+-- toggle 80 char guide
+vim.keymap.set("n", "<leader>cc", function()
+    vim.o.cursorcolumn = not vim.o.cursorcolumn
+end)
 
 -- toggle color column
-vim.keymap.set("n", "<leader>8", ":let &cc = &cc == 0 ? 80 : 0<cr>", {silent=true})
+vim.keymap.set("n", "<leader>8", function()
+    vim.o.cc = vim.o.cc == "80" and "0" or "80"
+end)
 
 -- visually select pasted content
-vim.keymap.set("n", "gp", "'`[' . strpart(getregtype(), 0, 1) . '`]'", {expr=true})
+vim.keymap.set("n", "gp", function()
+    return "`[" .. vim.fn.strpart(vim.fn.getregtype(), 0, 1) .. "`]"
+end, {expr=true})
 
 -- clear search highlight
-vim.keymap.set("n", "<esc>", ":<C-U>noh<cr>", {silent=true})
-
-vim.keymap.set("n",
-    "<leader>n",
-    ":let @/='\\C\\V\\<'.expand(\"<cword>\").'\\>'<CR>:set hls<CR>cgn",
-    {silent=true}
-)
-vim.keymap.set("n",
-    "<leader>N",
-    ":let @/='\\C\\V\\<'.expand(\"<cword>\").'\\>'<CR>:set hls<CR>cgN",
-    {silent=true}
-)
-
--- cgn on selection
-vim.keymap.set("v", "<leader>n", "\"zy:let @/='\\C\\V'.@z<CR>:set hls<CR>cgn", {silent=true})
-vim.keymap.set("v", "<leader>N", "\"zy:let @/='\\C\\V'.@z<CR>:set hls<CR>cgN", {silent=true})
-
--- record macro on current word and selection
-vim.keymap.set("n", "<leader>q", ":let @/='\\C\\V\\<'.expand(\"<cword>\").'\\>'<CR>:set hls<CR>qq", {silent=true})
-vim.keymap.set("v", "<leader>q", "zy:let @/='\\C\\V'.@z<CR>:set hls<CR>qq", {silent=true})
+vim.keymap.set("n", "<esc>", function()
+    vim.o.hlsearch = false
+end)
 
 -- ^, $, and %, <c-^> are motions I use all the time
 -- however, the keys are in awful positions
 vim.keymap.set({"n", "v"}, "gh", "^")
 vim.keymap.set({"n", "v"}, "gl", "$")
 vim.keymap.set({"n", "v"}, "gm", "%")
--- vim.keymap.set("n", "<c-p>", "<c-^>")
 
 vim.keymap.set("n", "H", "H^")
 vim.keymap.set("n", "M", "M^")
 vim.keymap.set("n", "L", "L^")
 
--- stop Ignorecase for * and #
--- # in middle of a word should jump to previous word, not start of current
-vim.keymap.set("n", "*", ":let @/='\\C\\<' . expand('<cword>') . '\\>'<CR>:let v:searchforward=1<CR>n", {silent=true})
-vim.keymap.set("n", "#", "\"_yiw:let @/='\\C\\<' . expand('<cword>') . '\\>'<CR>:let v:searchforward=0<CR>n", {silent=true})
- 
--- visual # and * don't yank to default register
-vim.keymap.set("v", "*", '"zy/\\V<C-R>z<CR>')
-vim.keymap.set("v", "#", '"zy?\\V<C-R>z<CR>')
-
-vim.keymap.set("n", "gn", "\"zyiw:let @/='\\C\\<'.@z.'\\>'<CR>:set hls<CR>", {silent=true})
-vim.keymap.set("v", "gn", "\"zy:let @/='\\C'.@z<CR>:set hls<CR>", {silent=true})
-
 -- I center screen all the time, zz is slow and hurts my finger
 vim.keymap.set("n", "gb", "zz")
-
-vim.keymap.set("n", "<c-o>", "<c-o>zz", {noremap=true})
-vim.keymap.set("n", "<c-i>", "<c-i>zz", {noremap=true})
+vim.keymap.set("n", "<c-o>", "<c-o>zz")
+vim.keymap.set("n", "<c-i>", "<c-i>zz")
 
 vim.keymap.set("n", "<leader>s", "1z=")
 
@@ -92,39 +64,22 @@ vim.keymap.set("n", "<leader>s", "1z=")
 vim.keymap.set("o", "l", "_")
 vim.keymap.set("o", "c", "l")
 
--- jump words skipping symbols with ctrl
-vim.keymap.set(
-    "n", "<c-w>",
-    ':call search("[a-zA-Z0-9_]\\\\@=\\\\<", "z")<CR>',
-    {silent=true}
-)
-vim.keymap.set(
-    "n", "<c-b>",
-    ':call search("[a-zA-Z0-9_]\\\\@=\\\\<", "b")<CR>',
-    {silent=true}
-)
-vim.keymap.set(
-    "n", "<c-e>",
-    ':call search("[a-zA-Z0-9_]\\\\>", "z")<CR>',
-    {silent=true}
-)
-
 -- make l open fold even if at EOL
 vim.keymap.set(
     "n", "l", ":silent! norm zo<CR>l",
-    {silent=true, noremap=true}
+    {silent=true}
 )
 
 vim.keymap.set("n", "<leader>i", "~hi");
 vim.keymap.set("v", "<leader>i", "~gvI");
 
-vim.keymap.set("v", "<c-w>", "<esc><c-w>mzgv`z", {silent=true, noremap=false});
-vim.keymap.set("v", "<c-b>", "<esc><c-b>mzgv`z", {silent=true, noremap=false});
-vim.keymap.set("v", "<c-e>", "<esc><c-e>mzgv`z", {silent=true, noremap=false});
-
--- remap <c-w> since above mappings remove it
-vim.keymap.set("n", "g<c-w>", "<c-w>")
-
-local opts = { noremap = true, silent = true }
+local opts = { silent = true }
 vim.keymap.set('n', '<leader>[', vim.diagnostic.goto_prev, opts)
 vim.keymap.set('n', '<leader>]', vim.diagnostic.goto_next, opts)
+
+function SynStack()
+    local stack = vim.fn.synstack(vim.fn.line('.'), vim.fn.col('.'))
+    local names = vim.fn.map(stack, 'synIDattr(v:val, "name")')
+    print(table.concat(names, ", "))
+end
+vim.keymap.set('n', '<leader>z', SynStack)
