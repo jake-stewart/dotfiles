@@ -326,7 +326,7 @@ alias cd=cdls
 
 catls() {
     if [[ "$#" -eq "2" ]]; then
-        [[ -f "$1" ]] && cat "$2" || ls --color=auto "$2"
+        [[ -f "$2" ]] && cat "$2" || ls --color=auto "$2"
     else
         [[ "$1" = "cat" ]] && cat "${@:2}" || ls --color=auto "${@:2}"
     fi
