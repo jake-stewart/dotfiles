@@ -1,4 +1,4 @@
-vim.g.mapleader = "t"
+vim.g.mapleader = " "
 
 vim.o.path = "**"
 vim.o.foldmethod = "marker"               -- use {{{ and }}} for folding

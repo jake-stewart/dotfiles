@@ -10,9 +10,10 @@ read_sources() {
 
 jfind_command() {
     jfind \
+        $1 \
         --hints \
         --select-hint \
         --history=~/.cache/jfind-history/sources
 }
 
-read_sources | jfind_command | tee "$OUTPUT"
+read_sources | jfind_command "$1" | tee "$OUTPUT"

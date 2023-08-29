@@ -16,6 +16,13 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
     {
+        "nordtheme/vim"
+    },
+    {
+        "rakr/vim-one"
+    },
+
+    {
         'junegunn/fzf'
     },
 
@@ -54,64 +61,58 @@ require("lazy").setup({
         },
     },
 
-    -- {
-    --     'nvim-telescope/telescope.nvim',
-    --     tag = '0.1.1',
-    --     dependencies = { 'nvim-lua/plenary.nvim' }
-    -- },
+    {
+        'nvim-telescope/telescope.nvim',
+        tag = '0.1.1',
+        dependencies = { 'nvim-lua/plenary.nvim' }
+    },
 
-    -- {
-    --     'nvim-telescope/telescope-fzf-native.nvim',
-    --     build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build',
-    --     config = function()
-    --         require('telescope').setup {
-    --             extensions = {
-    --                 fzf = {
-    --                     fuzzy = true,
-    --                     override_generic_sorter = true,
-    --                     override_file_sorter = true,
-    --                     case_mode = "smart_case",
-    --                 }
-    --             }
-    --         }
-    --         require('telescope').load_extension('fzf')
-    --     end
-    -- },
+    {
+        'nvim-telescope/telescope-fzf-native.nvim',
+        build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build',
+        config = function()
+            require('telescope').setup {
+                extensions = {
+                    fzf = {
+                        fuzzy = true,
+                        override_generic_sorter = true,
+                        override_file_sorter = true,
+                        case_mode = "smart_case",
+                    }
+                }
+            }
+            require('telescope').load_extension('fzf')
+        end
+    },
 
     {
         "jake-stewart/filestack.vim",
         keys = {
-            { "<m-o>" },
-            { "<m-i>" },
-            { "<c-p>" },
+            { "<m-o>", function()
+                vim.fn.FilestackBack()
+                vim.cmd.norm("zz")
+            end },
+            { "<m-i>", function()
+                vim.fn.FilestackForward()
+                vim.cmd.norm("zz")
+            end },
+            -- { "<c-p>", function()
+            --     vim.fn.FilestackAlternateFile()
+            --     vim.cmd.norm("zz")
+            -- end },
         },
-        config = function()
-            local opts = { silent = true }
-            vim.keymap.set('n', '<m-o>', vim.fn.FilestackBack, opts)
-            vim.keymap.set('n', '<m-i>', vim.fn.FilestackForward, opts)
-
-            vim.cmd [[
-                function! FilestackAlternateFile()
-                    let [l:jumplist, l:pos] = getjumplist()
-                    if l:pos >= len(l:jumplist) - 1
-                        call FilestackBack()
-                    else
-                        call FilestackForward()
-                    endif
-                endfunction
-            ]]
-            vim.keymap.set('n', '<c-p>', vim.fn.FilestackAlternateFile, opts)
-        end
     },
 
-
     {
-        "jake-stewart/jfind.nvim", branch = "1.0",
+        "jake-stewart/jfind.nvim", branch = "2.0",
         keys = {
             {"<c-f>", function()
                 local Key = require("jfind.key")
                 require("jfind").findFile({
                     formatPaths = true,
+                    preview = true,
+                    previewPosition = "right",
+                    queryPosition = "top",
                     hidden = true,
                     callback = {
                         [Key.DEFAULT] = vim.cmd.edit,
@@ -126,7 +127,12 @@ require("lazy").setup({
                 local Key = require("jfind.key")
                 jfind.liveGrep({
                     exclude = {},
+                    include = {},
+                    query = "",
                     hidden = true,
+                    preview = true,
+                    previewPosition = "bottom",
+                    queryPosition = "top",
                     caseSensitivity = "smart",
                     callback = {
                         [Key.DEFAULT] = jfind.editGotoLine,
@@ -135,14 +141,17 @@ require("lazy").setup({
                     }
                 })
             end},
-
         },
         config = function()
             require("jfind").setup({
                 exclude = {
-                    ".git",
+                    ".git*",
                     ".idea",
                     ".vscode",
+                    ".settings",
+                    ".classpath",
+                    ".gradle",
+                    ".project",
                     ".sass-cache",
                     ".class",
                     "__pycache__",
@@ -151,12 +160,12 @@ require("lazy").setup({
                     "build",
                     "tmp",
                     "assets",
+                    "ci",
                     "dist",
                     "public",
                     "*.iml",
                     "*.meta"
                 },
-                border = "rounded",
                 key = "<c-f>",
                 tmux = true,
             });
@@ -241,19 +250,6 @@ require("lazy").setup({
     },
 
     {
-        'andrewradev/splitjoin.vim',
-        keys = {
-            { "gS" },
-            { "gJ" },
-        },
-        init = function()
-            vim.g.splitjoin_r_indent_align_args = 0
-            vim.g.splitjoin_python_brackets_on_separate_lines = 1
-            vim.g.splitjoin_html_attributes_hanging = 1
-        end
-    },
-
-    {
         'machakann/vim-swap',
         keys = {
             { "gs", "<plug>(swap-interactive)" }
@@ -278,6 +274,7 @@ require("lazy").setup({
 
             require('bqf').setup({
                 preview = {
+                    winblend = 0,
                     show_title = true,
                     win_height = 999,
                     border_chars = {
@@ -380,7 +377,12 @@ require("lazy").setup({
                     capabilities = capabilities,
                     on_attach = function(client, bufnr)
                         on_attach(client, bufnr, opts)
-                    end
+                    end,
+                    settings = {
+                        Lua = {
+                            diagnostics = { globals = {'vim'} }
+                        }
+                    }
                 })
             end
 
@@ -480,6 +482,7 @@ require("lazy").setup({
 
     {
         'nvim-treesitter/nvim-treesitter',
+        enabled = false,
         ft = { "c", "lua", "php", "cpp", "javascript", "typescript", "cs" },
         config = function()
             require('nvim-treesitter.configs').setup({
@@ -531,6 +534,7 @@ require("lazy").setup({
                 vim.keymap.set('n', '<c-k>', function()
                     vim.diagnostic.open_float(nil, { focusable = false })
                 end, bufopts)
+                -- vim.keymap.set('i', '<c-k>', vim.lsp.buf.signature_help, bufopts);
             end
 
             local lsp_setup = {

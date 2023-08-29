@@ -29,5 +29,6 @@ tmux display-popup \
     -x $(((client_width - width) / 2)) \
     -E \
     -d "$(pwd)" \
+    $2 \
     $border \
     "$1"

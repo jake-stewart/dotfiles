@@ -8,6 +8,8 @@ read_sessions() {
 
 jfind_command() {
     jfind \
+        --query-position=top \
+        --external-border \
         --hints \
         --history="~/.cache/jfind-history/sessions"
 }
