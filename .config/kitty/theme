@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cp "$HOME/.config/kitty/colors/$1" ~/.cache/active_theme
+
