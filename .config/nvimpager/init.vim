@@ -60,62 +60,77 @@ hi Comment gui=italic cterm=italic
 hi Todo gui=italic cterm=italic
 
 " }}}
-" SEARCH {{{
-
-function! MapSearch()
-    set cursorline
-    cnoremap <silent><cr> <cr>:call UnmapSearch()<cr>
-    cnoremap <silent><esc> <c-c>:call UnmapSearch()<cr>L0
-endf
-
-function! UnmapSearch()
-    cunmap <cr>
-    cunmap <esc>
-endf
-
-function! SearchNext()
-    if &cursorline
-        return "$n"
-    else
-        set cursorline
-        return "H$n"
-    endif
-endf
-
-function! SearchPrev()
-    if &cursorline
-        return "0N"
-    else
-        set cursorline
-        return "H0N"
-    endif
-endf
-
-" }}}
 " KEYBINDS {{{
 
-" unmap unused keys
+let g:searchMode = v:false
+
+function! UnhookSearch()
+    cunmap <cr>
+    cunmap <esc>
+endfunction
+
+function! HookSearch(success, fail)
+    exe 'cnoremap <silent><esc> <c-c>:call UnhookSearch()<CR>' .. a:fail
+    exe 'cnoremap <silent><cr> <cr>:call UnhookSearch()<CR>' .. a:success
+endfunction
+
+function! SearchMode()
+    let g:searchMode = v:true
+    set cursorline
+    noremap gh ^
+    noremap gl $
+    noremap gm %
+endf
+
+function! StartSearch()
+    call SearchMode()
+    call HookSearch("", ":call PagerMode()<CR>")
+endfunction
+
+function! PagerMode()
+    set nocursorline
+    let g:searchMode = v:false
+    try
+        nunmap gh
+        nunmap gl
+        nunmap gm
+    catch | endtry
+    call feedkeys("L0", "nt")
+endfunction
+
 let s:unmap_keys = [
-        \ "a", "b", "c", "d", "e", "h", "i", "l",
-        \ "m", "o", "p", "r", "s", "t", "w", "x",
-        \ "y", "z", "A", "B", "C", "D", "E", "F",
-        \ "H", "I", "J", "K", "L", "M", "O", "P",
-        \ "Q", "R", "S", "T", "U", "W", "X", "Y",
-        \ "Z", "-", "=", "[", "]", ";", "'", ",",
-        \ ".", "`", "@", "#", "$", "%", "^", "&",
-        \ "*", "(", ")", "_", "+", "{", "}", "<",
-        \ ">", "~", "<!>",
-        \ "<bslash>", "<bar>", "\""
+        \ "c", "d", "o", "p", "r", "s", "x", "y",
+        \ "z", "A", "C", "D", "I", "J", "O", "P",
+        \ "Q", "R", "S", "U", "X", "Z", "-", "=",
+        \ "[", "]", ".", "@", "&", "_",
     \ ]
+
+let s:toggle_keys = [
+        \ "b", "e", "h", "l", "m", "t", "w", "B",
+        \ "E", "F", "K", "T", "W", "Y", ";", "'",
+        \ ",", "`", "#", "$", "%", "^", "*", "(",
+        \ ")", "+", "{", "}", "<", ">", "~", "<!>",
+    \ ]
+
 for s:key in s:unmap_keys
-    exe 'nnoremap ' . s:key . ' <NOP>'
+    exe 'map ' . s:key . ' <NOP>'
 endfor
 
-" make search only match once per line
-noremap / H:<c-u>call MapSearch()<cr>/
+for s:key in s:toggle_keys
+    exe 'nnoremap <expr>' . s:key . ' g:searchMode ? "' .. s:key .. '" : ""'
+endfor
 
-nnoremap <silent><expr>n SearchNext()
-nnoremap <silent><expr>N SearchPrev()
+nnoremap i <NOP>
+
+" make search only match once per line
+noremap / H:<c-u>call StartSearch()<cr>/
+noremap ? L:<c-u>call StartSearch()<cr>?
+
+nnoremap <silent>a :call PagerMode()<CR>
+
+noremap <silent><expr>H g:searchMode ? "H" : ":call SearchMode()<CR>H"
+noremap <silent><expr>M g:searchMode ? "M" : ":call SearchMode()<CR>M"
+noremap <silent><expr>L g:searchMode ? "M" : ":call SearchMode()<CR>L"
 
 " q and ctrl + c quits program
 nnoremap <silent>q <cmd>qa!<CR>
@@ -123,31 +138,35 @@ cnoremap <silent><c-c> <cmd>qa!<CR>
 nnoremap <silent><c-c> <cmd>qa!<CR>
 
 " clear search highlight
-nnoremap <silent><esc> :set nocul<CR>:noh<CR>L0
-xnoremap <silent><esc> <esc>:set nocul<CR>:noh<CR>L0
+nnoremap <silent><expr><esc> g:searchMode ? ":call PagerMode()<CR>" : ":noh<CR>"
 
 " yank visual
-xnoremap <silent>y y:set nocul<CR>:noh<CR>L0
-
-xnoremap gh ^
-xnoremap gl $
-xnoremap gm %
+xnoremap <silent>y y:call PagerMode()<CR>
 
 " bind u/d to ctrl+u/d
-nnoremap <silent>d :set nocul<CR><c-d>L0
-nnoremap <silent>u :set nocul<CR><c-u>L0
+nnoremap <silent>d <c-d>:call PagerMode()<CR>
+nnoremap <silent>u <c-u>:call PagerMode()<CR>
 
-nnoremap <silent>j :set nocul<CR><c-e>L0
-nnoremap <silent>k :set nocul<CR><c-y>L0
+nnoremap <silent><expr>j g:searchMode ? "j" : "<c-e>L0"
+nnoremap <silent><expr>k g:searchMode ? "k" : "<c-y>L0"
 
-nnoremap <silent>gg :set nocul<CR>ggL0
-nnoremap <silent>G GztL0:set nocul<CR>
+noremap <silent><expr>g g:searchMode ? "g" : "ggL0"
+noremap <silent><expr>G g:searchMode ? "G" : "zbGL0"
 
 nnoremap <silent><expr>zt &cul ? "zt" : ""
 nnoremap <silent><expr>zb &cul ? "zb" : ""
 nnoremap <silent><expr>zz &cul ? "zz" : ""
-nnoremap <silent><expr>gb &cul ? "zz" : "" " }}}
 
-au VimEnter * norm k
+function! OnVimEnter()
+    try
+        unmap gx
+        unmap g%
+    catch | endtry
+    norm k
+endfunction
+
+au VimEnter * call OnVimEnter()
+
+" }}}
 
 " vim: foldmethod=marker

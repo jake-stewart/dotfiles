@@ -10,6 +10,7 @@ function snippet(key, output)
 end
 function printLineSnippet(output) snippet("<c-j>", output) end
 function debugSnippet(output) snippet("<c-d>", output) end
+function errorSnippet(output) snippet("<c-x>", output) end
 function whileLoopSnippet(output) snippet("<c-w>", output) end
 function forLoopSnippet(output) snippet("<c-f>", output) end
 function ifStatementSnippet(output) snippet("<c-i>", output) end
@@ -21,7 +22,9 @@ function defaultCaseSnippet(output) snippet("<c-b>", output) end
 function functionSnippet(output) snippet("<c-m>", output) end
 function lambdaSnippet(output) snippet("<c-l>", output) end
 function classSnippet(output) snippet("<c-k>", output) end
-function structSnippet(output) snippet("<c-t>", output) end
+function structSnippet(output) snippet("<c-h>", output) end
+function tryCatchSnippet(output) snippet("<c-t>", output) end
+
 
 augroup("PythonSnippets", {clear=true})
 autocmd("FileType", {
@@ -31,6 +34,7 @@ autocmd("FileType", {
         snippet("-", "____<left><left>")
         printLineSnippet('print("")<left><left>')
         debugSnippet('print()<left>')
+        errorSnippet('print()<left>')
         whileLoopSnippet('while :<left>')
         forLoopSnippet("for :<left>")
         ifStatementSnippet("if :<esc>i")
@@ -40,6 +44,7 @@ autocmd("FileType", {
         lambdaSnippet("lambda:<left>")
         classSnippet("class :<left>")
         structSnippet("class :<left>")
+        tryCatchSnippet("try:<CR>...<CR>except Exception as e:<CR>...<ESC>kkA<BS><BS><BS>")
     end
 })
 
@@ -50,6 +55,7 @@ autocmd("FileType", {
     callback = function()
         printLineSnippet('echo<space>""<left>')
         debugSnippet('echo<space>')
+        errorSnippet('echo  >/dev/stderr<ESC>Bhi')
         whileLoopSnippet('while ; do<CR>done<esc>k$hhhi')
         forLoopSnippet("for ; do<CR>done<esc>k$hhhi")
         ifStatementSnippet("if ; then<CR>fi<esc>k$bbi")
@@ -69,6 +75,7 @@ autocmd("FileType", {
     callback = function()
         printLineSnippet('console.log("");<esc>hhi')
         debugSnippet('console.log();<esc>hi')
+        errorSnippet('console.error();<esc>hi')
         whileLoopSnippet('while () {<CR>}<esc>k$hhi')
         forLoopSnippet("for () {<CR>}<esc>k$hhi")
         ifStatementSnippet("if () {<CR>}<esc>k$hhi")
@@ -80,7 +87,8 @@ autocmd("FileType", {
         functionSnippet("function () {<CR>}<esc>k$F(i")
         lambdaSnippet("() => {<CR>}<esc>k$BBa")
         classSnippet("class  {<CR>}<esc>k$hi")
-        structSnippet("struct  {<CR>}<esc>k$hi")
+        structSnippet("interface  {<CR>}<esc>k$hi")
+        tryCatchSnippet("try {<CR>}<CR>catch (error) {<CR>}<ESC>kkO")
     end
 })
 
@@ -101,6 +109,7 @@ autocmd("FileType", {
         defaultCaseSnippet("default:<CR>break;<esc>O")
         functionSnippet("() {<CR>}<esc>k$F(i")
         structSnippet("struct  {<CR>}<esc>k$hi")
+        tryCatchSnippet("try {<CR>}<CR>catch {<CR>}<ESC>kkO")
     end
 })
 
@@ -123,6 +132,7 @@ autocmd("FileType", {
         lambdaSnippet("[]() {}<left><left><left><left>")
         classSnippet("class  {<CR>}<esc>k$hi")
         structSnippet("struct  {<CR>}<esc>k$hi")
+        tryCatchSnippet("try {<CR>}<CR>catch {<CR>}<ESC>kkO")
     end
 })
 
@@ -145,6 +155,7 @@ autocmd("FileType", {
         lambdaSnippet("() -> {}<esc>F)i")
         classSnippet("public class  {<CR>}<esc>k$hi")
         structSnippet("private class  {<CR>}<esc>k$hi")
+        tryCatchSnippet("try {<CR>}<CR>catch {<CR>}<ESC>kkO")
     end
 })
 
@@ -167,5 +178,6 @@ autocmd("FileType", {
         lambdaSnippet("[]() {}<left><left><left><left>")
         classSnippet("class  {<CR>}<esc>k$hi")
         structSnippet("struct  {<CR>}<esc>k$hi")
+        tryCatchSnippet("try {<CR>}<CR>catch {<CR>}<ESC>kkO")
     end
 })

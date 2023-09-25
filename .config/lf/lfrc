@@ -1,3 +1,4 @@
+
 # oooo   .o88o. 
 # `888   888 `" 
 #  888  o888oo  
@@ -11,6 +12,10 @@
 set incsearch
 set hidden
 # set previewer ~/.config/lf/bat_preview
+
+set previewer ~/.config/lf/preview.sh
+set cleaner ~/.config/lf/clean.sh
+
 set mouse
 cmd open  # disable 'l' to 'open' files
 
@@ -21,12 +26,11 @@ set cursorpreviewfmt  "\033[7m"
 # }}}
 # KEY BINDINGS {{{
 
-map C push A<c-u>             # rename entirely
-map c push A<a-b><c-u>.<left> # rename until extension
-map I push A<c-a>             # rename at the very beginning
-map i push A<a-b><a-b><a-f>   # rename before extention
-map a push A<a-b>             # rename after extention
-map A rename                  # rename at the very end
+map C push :rename<enter><c-e><c-u>
+map c push :rename<enter><c-u>
+map i push :rename<enter>
+map I push :rename<enter><c-a>
+map A push :rename<enter><c-e>
 
 map g top
 map D delete
@@ -35,6 +39,19 @@ map <space> invert
 map <esc> :clear; unselect
 map v toggle
 map V :toggle; down
+
+cmd edit ${{
+    case $(file --mime-type -Lb "$f") in
+        text/* \
+        | application/json)
+            nvim "$f";;
+        image/*)
+            ~/.config/tmux/popup-image.py popup "$f" > /dev/tty 2>/dev/null &;;
+    esac
+}}
+
+map e edit
+map o ${{nvim "$f"}}
 
 # }}}
 

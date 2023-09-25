@@ -9,7 +9,7 @@ max_height=28
 fullscreen() {
     width=$client_width
     height=$client_height
-    border="-B"
+    # border="-B"
 }
 
 if ((client_width > max_width)); then

@@ -12,6 +12,24 @@ autocmd("FileType", {
     end
 })
 
+-- -- remove line numbers in terminal & start insert
+-- autocmd("TermOpen", {
+--     pattern = "*",
+--     group = "NvimCustomAutocommands",
+--     callback = function()
+--         vim.opt_local.number = false
+--         vim.cmd.startinsert()
+--     end
+-- })
+-- 
+-- autocmd("TermClose", {
+--     pattern = "*",
+--     group = "NvimCustomAutocommands",
+--     callback = function()
+--         vim.cmd.close()
+--     end
+-- })
+
 -- restore cursor position
 autocmd("BufReadPost", {
     pattern = "*",

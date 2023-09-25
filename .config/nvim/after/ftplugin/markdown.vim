@@ -7,6 +7,7 @@ augroup CustomMarkdown
 augroup END
 
 let b:linkRegex = '^\s*\[[^\[\]]*\]([a-zA-Z0-9._\/ -]\+)$'
+let b:imageRegex = '^\s*!\[[^\[\]]*\]([a-zA-Z0-9._\/ -]\+)$'
 
 nnoremap <silent><buffer><backspace> :call BackLink()<CR>
 nnoremap <silent><buffer><enter> :call OpenLink(line('.'))<CR>
@@ -16,6 +17,7 @@ nnoremap <silent><buffer><s-tab> :call JumpPrevLink()<CR>
 nnoremap <silent><buffer><leader>tt :call g:Table.new().create(input("Table Name: "))<CR>
 nnoremap <silent><buffer><leader>tp :call g:Page.new().create(input("Page Name: "))<CR>
 nnoremap <silent><buffer><leader>tg :call g:Graph.new().create(input("Graph Name: "))<CR>
+nnoremap <silent><buffer><leader>ti :call g:Image.new().create(input("Image Name: "), input("Image Path: "))<CR>
 nnoremap <silent><buffer><leader>tr :call RenameObject(line('.'))<CR>
 nnoremap <silent><buffer><leader>td :call DeleteObject(line('.'))<CR>
 nnoremap <silent><buffer><leader>tm :call MoveObject(line('.'))<CR>
@@ -34,6 +36,7 @@ function g:Page.new()
 endfunction
 
 function g:Page.edit()
+    silent! write
     exe 'edit ' . self.path . '/index.md'
 endfunction
 
@@ -180,6 +183,165 @@ function g:Page.create(name)
     write
 endfunction
 
+let g:Image = {}
+
+function g:Image.new()
+    let l:newImage = copy(self)
+    return l:newImage
+endfunction
+
+function g:Image.edit()
+    " absolute monstrosity
+    " i need to write directory to vim's controlling tty
+    " this is because the script create an image via kitty graphics protocol
+    " we write to kitty by writing to the controlling terminal
+    " since i use tmux, we need to do a tmux passthrough
+    " this does not work on the tmux popup since it only bypasses
+    " to the controlling tmux tty
+    exe 'lua io.open("/dev/stdout", "w")'
+                \ . 'io.write(vim.fn.system({vim.fn.expand('
+                \ . '"~/.config/tmux/popup-image.py"), "popup", [['
+                \ . self.path . ']]}))'
+endfunction
+
+function g:Image.parse(line)
+    let l:lineContent = getline(a:line)
+    if l:lineContent !~ b:imageRegex
+        return v:false
+    endif
+    " ![Tux, the Linux mascot](/assets/images/tux.png)
+    let l:file = substitute(l:lineContent, '^\s*!\[.*\]', "", "g")
+    let l:file = substitute(l:file, '[()]', "", "g")
+    let l:file = substitute(l:file, '\/index.md$', "", "")
+
+    let l:name = substitute(l:lineContent, '(.*)', "", "g")
+    let l:name = substitute(l:name, '\(\s*!\[\|\]$\)', "", "g")
+
+    if strlen(l:file) == 0
+        return v:false
+    endif
+    let l:parent = expand("%:p:h") . '/'
+    let l:path = l:parent . l:file
+
+    let self.line = a:line
+    let self.name = l:name
+    let self.path = l:path
+    let self.fileName = l:file
+    return v:true
+endfunction
+
+function g:Image.formatName(name)
+    let l:name = tolower(a:name)
+    let l:name = substitute(l:name, "+", "p", "g")
+    let l:name = substitute(l:name, "&", "and", "g")
+    let l:name = substitute(l:name, '\s', "_", "g")
+    let l:name = substitute(l:name, "[^a-zA-Z0-9_-]", "", "g")
+    return l:name
+endfunction
+
+function g:Image.draw()
+    call cursor(self.line, 1)
+    exe "norm " . (self.line >= line('$') ? 'o' : 'O')
+                \ . '![' . self.name . '](' . self.fileName . ')'
+endfunction
+
+function! g:Image.erase()
+    call self.deleteBuffer()
+    exe ':' . self.line . 'd'
+endfunction
+
+function! g:Image.deleteBuffer()
+    let l:bufnr = bufnr(self.path)
+    if bufnr != -1
+        try
+            exe 'bdelete ' . l:bufnr
+        catch
+        endtry
+    endif
+endfunction
+
+function! g:Image.delete()
+    call system('rm -rf "$HOME/.cache/notes-bin/' . self.fileName . '"')
+    call system("mv '" . self.path . "' ~/.cache/notes-bin")
+    call self.erase()
+endfunction
+
+function! g:Image.move(newParent)
+    let l:newParent = tolower(a:newParent)
+    let l:newParent = substitute(l:newParent, "[^a-zA-Z0-9_/.-]", "_", "g")
+    if strlen(l:newParent) == 0
+        return
+    endif
+    let l:newParent = expand("%:p:h") . "/" . l:newParent
+    let l:newPath = l:newParent . "/" . self.fileName
+    if !isdirectory(l:newParent)
+        redraw
+        echo "Location is not a valid directory"
+        return
+    endif
+    if filereadable(l:newPath) || isdirectory(l:newPath)
+        redraw
+        echo "Name already exists in destination"
+        return
+    endif
+    call self.deleteBuffer()
+    call self.erase()
+    write
+    call system("mv '" . self.path . "' '" . l:newPath . "'")
+    let self.path = l:newPath
+    let self.parent = l:newParent
+    exe 'edit ' . self.parent . '/index.md'
+    let self.line = line('$')
+    silent call self.draw()
+    write
+endfunction
+
+function! g:Image.rename(newName)
+    let l:newName = self.formatName(a:newName)
+    if strlen(l:newName) == 0
+        return
+    endif
+    let l:newPath = expand("%:p:h") . "/" . l:newName
+    if filereadable(l:newPath) || isdirectory(l:newPath)
+        redraw
+        echo "Name already taken"
+        return v:false
+    endif
+
+    call system('mv "' . self.path . '" "' . l:newPath . '"')
+
+    call self.erase()
+    let self.path = l:newPath
+    let self.name = a:newName
+    let self.fileName = l:newName
+    silent call self.draw()
+    write
+endfunction
+
+function g:Image.create(name, path)
+    let self.name = a:name
+    let self.line = line('.')
+    let self.fileName = self.formatName(a:name)
+    if strlen(self.fileName) == 0
+        return v:false
+    endif
+    let self.fileName = self.formatName(a:name) . ".png"
+    let self.path = expand("%:p:h") . "/" . self.fileName
+    if filereadable(self.path) || isdirectory(self.path)
+        redraw
+        echo "Image already exists"
+        return v:false
+    endif
+    if !filereadable(a:path) || isdirectory(a:path)
+        redraw
+        echo "Source image does not exist"
+        return v:false
+    endif
+    call system('cp "' . a:path . '" "' . self.path . '"')
+    silent call self.draw()
+    write
+endfunction
+
 let g:BlockObject = {}
 
 function g:BlockObject.new()
@@ -188,6 +350,7 @@ function g:BlockObject.new()
 endfunction
 
 function g:BlockObject.edit()
+    silent! write
     let b:editObject = self
     exe 'edit ' . self.path
     norm zz
@@ -386,6 +549,13 @@ function! CreatePage()
     call l:page.create(l:pageName)
 endfunction
 
+function! CreateImage()
+    let l:imageName = input("Image Name: ")
+    let l:imagePath = input("Image Path: ")
+    let l:image = g:Image.new()
+    call l:image.create(l:imageName, l:imagePath)
+endfunction
+
 function! JumpNextLink()
     call search(b:linkRegex)
 endfunction
@@ -413,6 +583,10 @@ function! BackLink()
 endfunction
 
 function! ParseCursorObject()
+    let l:object = g:Image.new()
+    if l:object.parse(line('.'))
+        return l:object
+    endif
     let l:object = g:Page.new()
     if l:object.parse(line('.'))
         return l:object
@@ -462,7 +636,6 @@ function! OpenLink(line)
         echo "Not an object"
         return
     endif
-    write
     call l:object.edit()
 endfunction
 

@@ -1,4 +1,4 @@
-vim.o.termguicolors = false 
+vim.o.termguicolors = false
 vim.o.background = "dark"
 vim.cmd.colorscheme("custom")
 

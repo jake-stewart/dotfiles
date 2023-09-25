@@ -13,9 +13,11 @@ local function forceGoFile()
     cmd.norm("gf")
 end
 
-keymap.set("n", "<space>", "<NOP>");
-
 keymap.set("n", "<leader>gf", forceGoFile);
+
+keymap.set("i", "<c-r><c-r>", "<c-r>\"");
+
+keymap.set("n", "U", "<c-r>");
 
 local function scroll(direction)
     local scrolloff = o.scrolloff
@@ -33,11 +35,6 @@ cmd.digraph("zs " .. 0x200b)
 -- toggle 80 char guide
 keymap.set("n", "<leader>cc", function()
     o.cursorcolumn = not o.cursorcolumn
-end)
-
--- toggle color column
-keymap.set("n", "<leader>8", function()
-    o.cc = o.cc == "80" and "0" or "80"
 end)
 
 -- visually select pasted content
@@ -70,6 +67,7 @@ keymap.set("n", "<leader>s", "1z=")
 -- dd, yy, cc, etc all take too long since the same key is pressed twice
 -- use dl, yl, cl etc instead
 keymap.set("o", "l", "_")
+keymap.set("o", "L", "_")
 keymap.set("o", "c", "l")
 
 -- make l open fold even if at EOL
@@ -103,3 +101,8 @@ function SynStack()
     print(table.concat(names, ", "))
 end
 keymap.set('n', '<leader>z', SynStack)
+
+keymap.set('n', '<leader>?', "yiw:h <C-R>+<CR>")
+keymap.set('v', '<leader>?', "y:h <C-R>+<CR>")
+
+

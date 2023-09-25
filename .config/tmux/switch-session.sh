@@ -2,7 +2,8 @@
 
 CONF="$HOME/.config/tmux/sessions"
 
-selected=$(~/.config/jfind/jfind-session.sh)
+selected="$1"
+[ -z "$selected" ] && selected=$(~/.config/jfind/jfind-session.sh)
 [ -z "$selected" ] && exit;
 
 color=$(awk '/^'"$selected"' /{print $2}' "$CONF")

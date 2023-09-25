@@ -53,7 +53,10 @@ export PAGER=nvimpager_wrapper
 export HOMEBREW_NO_EMOJI=1
 
 # yarn
-alias yarn='yarn --emoji false'
+# alias yarn='yarn --emoji false'
+yarn() {
+    echo "yarn sucks"
+}
 
 # js-beautify
 alias js-beautify='js-beautify -b end-expand'
@@ -118,7 +121,43 @@ commandline-mode() {
 }
 zle -N commandline-mode
 bindkey -M vicmd ":" commandline-mode
-bindkey -M viopp -s "l" "-"
+
+# the '-' is supposed to mimic '_' in vim
+# however it is bugged for the first column
+function line-text-object {
+  MARK=0
+  CURSOR=$#BUFFER
+  REGION_ACTIVE=1
+}
+zle -N line-text-object
+bindkey -M viopp "l" line-text-object
+
+autoload -U select-quoted
+zle -N select-quoted
+for m in visual viopp; do
+    for c in {a,i}{\',\",\`}; do
+        bindkey -M $m $c select-quoted
+    done
+done
+
+autoload -U select-bracketed
+zle -N select-bracketed
+for m in visual viopp; do
+    for c in {a,i}${(s..)^:-'()[]{}<>bB'}; do
+        bindkey -M $m $c select-bracketed
+    done
+done
+
+wrap-sub-shell() {
+    while [[ "$BUFFER" = "" ]]; do
+        zle up-history
+    done
+    BUFFER=" \$($BUFFER)"
+    zle beginning-of-line
+    set-keymap main
+}
+zle -N wrap-sub-shell
+bindkey -M vicmd "$" wrap-sub-shell
 
 # }}}
 # PLUGINS {{{
@@ -126,6 +165,21 @@ bindkey -M viopp -s "l" "-"
 source "$HOME/.config/zsh/plugins/zsh-system-clipboard/zsh-system-clipboard.zsh"
 source "$HOME/.config/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
 source "$HOME/.config/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+
+# }}}
+# ZSH SYSTEM CLIPBOARD SETTINGS {{{
+
+# if buffer is empty then strip newlines from paste
+smart-paste() {
+    if [[ "$BUFFER" = "" ]]; then
+        zle zsh-system-clipboard-vicmd-vi-put-before
+        BUFFER=$(printf "%s" "$BUFFER")
+    else
+        zle zsh-system-clipboard-vicmd-vi-put-after
+    fi
+}
+zle -N smart-paste
+bindkey -M vicmd p smart-paste
 
 # }}}
 # ZSH SYNTAX HIGHLIGHTING SETTINGS {{{
@@ -234,6 +288,12 @@ accept-line () {
     if [[ "$BUFFER" =~ "^[0-9()].*" ]]; then
         # if the commandline is a mathematical expression, evaluate it
         accept-math-line
+    elif [[ "$BUFFER" = "k" ]]; then
+        # i use esc-k-enter to enter normal mode, load last history, and run it
+        # if i type it too fast, i type it as k-esc-enter which just runs 'k'
+        # if the buffer is a single 'k', replace it with the last history item
+        BUFFER="$(history | tail -n1 | sed 's/^[0-9]*[ \t]*//')"
+        zle .accept-line
     elif [[ "$BUFFER" = "" ]]; then
         # if it is empty, redisplay the prompt two lines down. this is much
         # faster than accepting an empty line since it avoids all the
@@ -252,22 +312,16 @@ zle -N accept-line accept-line
 
 # display ^C when hitting ctrl-c
 TRAPINT() { 
-    SIGINT=2
-    if [[ "$1" == "$SIGINT" ]] && zle; then
+    if [[ $1 == 2 ]] && zle; then
         zle end-of-line
         light-grey
         printf "^C"
-        clear-til-eol
         clear-style
+        clear-til-eol
         echo
-        zle kill-buffer
-        echo
-        display-prompt
         set-keymap main
-        return 0
-    else
-        return ${128+$1}
     fi
+    return $1
 }
 
 # }}}
@@ -345,7 +399,6 @@ lfcd () {
         rm -f "$tmp" >/dev/null
         [ -d "$dir" ] && [ "$dir" != "$(pwd)" ] && cd "$dir"
     fi
-    ls
 }
 alias lf=lfcd
 
@@ -399,11 +452,12 @@ tmux_wrapper() {
     if [[ "$#" -gt 0 ]]; then
         tmux "$@"
     else
-        if tmux ls -F "#S" 2>/dev/null | grep "^main$" &>/dev/null; then
-            tmux attach -t main
+        session="scratch"
+        if tmux ls -F "#S" 2>/dev/null | grep "^$session$" &>/dev/null; then
+            tmux attach -t "$session"
         else
-            color=$(awk '/^main/{print $2}' ~/.config/tmux/sessions)
-            tmux new -s main \
+            color=$(awk "/^$session/"'{print $2}' ~/.config/tmux/sessions)
+            tmux new -s "$session" \
                 "tmux set-environment session_color '$color'; zsh"
         fi
     fi
@@ -417,19 +471,8 @@ _clear=$(which clear)
 clear() {
     skipPostExec
     $_clear
-    tmux clear-history
+    [ -n "$TMUX" ] && tmux clear-history
 }
-
-# }}}
-# REPEAT COMMAND {{{
-
-# escape + k + enter = normal mode, load last history item, run it
-# sometimes i type it too fast and type k + escape + enter
-# this allows a single 'k' to run the previous command to solve this
-repeat_command() {
-    eval $(history | tail -n1 | awk '{$1=""; print $0}')
-}
-alias k=' repeat_command'
 
 # }}}
 # MK/MV CD {{{
