@@ -1,5 +1,9 @@
 let b:editObject = v:null
 
+setlocal nonumber
+setlocal foldcolumn=1
+setlocal nocursorline
+
 augroup CustomMarkdown
   au!
   au BufWinEnter *.md call OnWinEnter()
@@ -658,3 +662,213 @@ endfunction
 function! OnObjectSourceEnter()
     nnoremap <silent><buffer><backspace> :call ObjectSourceBacklink()<CR>
 endfunction
+
+hi link CodeBlock CursorLine
+
+lua << EOF
+
+function table.find(l, f)
+  for i, v in ipairs(l) do
+    if f(v) then
+      return i, v
+    end
+  end
+  return nil, nil
+end
+
+local ns_id = vim.api.nvim_create_namespace("md")
+
+local codeStartRegex = vim.regex([[^\s*```.*$]])
+local codeEndRegex = vim.regex([[^.*```.*$]])
+
+local extMarkId = 0
+
+local cbMarks = {}
+
+local function deleteMark(id)
+    return vim.api.nvim_buf_del_extmark(0, ns_id, id)
+end
+
+local function getMark(id, opts)
+    return vim.api.nvim_buf_get_extmark_by_id(0, ns_id, id, opts or {})
+end
+
+local function setMark(line, opts)
+    return vim.api.nvim_buf_set_extmark(0, ns_id, line, 0, opts or {})
+end
+
+local function getMarks(start, _end, opts)
+    return vim.api.nvim_buf_get_extmarks(
+        0,
+        ns_id,
+        {start, 0},
+        {_end, 0},
+        opts or {}
+    )
+end
+
+function parseMark(line, idx)
+    local eof = vim.fn.line("$")
+    local line_text = vim.fn.getline(line)
+    local startLine = line
+    local lang = string.sub(line_text, 4, #line_text)
+    line = line + 1
+    local matched = false
+    while line <= eof do
+        if codeEndRegex:match_str(vim.fn.getline(line)) then
+            matched = true
+            break
+        end
+        line = line + 1
+    end
+
+    if not matched then
+        return line
+    end
+
+    extMarkId = extMarkId + 1
+    local start_mark_id = setMark(startLine - 1, {
+        id = extMarkId,
+        end_row = line,
+        virt_text = {{lang, "CodeBlock"}},
+        virt_text_pos = 'right_align',
+        line_hl_group = "CodeBlock",
+        hl_group = "CodeBlock",
+        hl_eol = true,
+    })
+
+    extMarkId = extMarkId + 1
+    local end_mark_id = setMark(line - 1, {
+        id = extMarkId,
+        line_hl_group = "CodeBlock",
+        hl_group = "CodeBlock",
+        hl_eol = true,
+    })
+
+    if idx == nil then
+        table.insert(cbMarks, {start_mark_id, end_mark_id})
+    else
+        cbMarks[idx] = {start_mark_id, end_mark_id}
+    end
+    return line
+end
+
+function generateExtMarks(line, endLine, idx)
+    while line <= endLine do
+        if codeStartRegex:match_str(vim.fn.getline(line)) then
+            line = parseMark(line, idx)
+            if idx ~= nil then
+                idx = idx + 1
+            end
+        end
+        line = line + 1
+    end
+end
+
+function max(a, b)
+    if a == nil or b == nil then return a or b end
+    if a > b then return a else return b end
+end
+
+function min(a, b)
+    if a == nil or b == nil then return a or b end
+    if a < b then return a else return b end
+end
+
+function checkLine(start, _end)
+    local dirtyIdx = nil
+    local dirtyEndIdx = nil
+    local dirtyLine = nil
+
+    local marks = getMarks(max(1, start - 1), _end - 1)
+    for _, mark in pairs(marks) do
+        local idx, _ = table.find(cbMarks, function(cbMark)
+            return cbMark[1] == mark[1] or cbMark[2] == mark[1]
+        end)
+        local cbMark = cbMarks[idx]
+        local cbStart = getMark(cbMark[1])
+        local cbEnd = getMark(cbMark[2])
+        local cbStartValid = codeStartRegex:match_str(
+            vim.fn.getline(cbStart[1] + 1))
+        local cbEndValid = codeEndRegex:match_str(
+            vim.fn.getline(cbEnd[1] + 1))
+        if cbStartValid and cbEndValid then
+            dirtyIdx = min(dirtyIdx, idx)
+            dirtyEndIdx = max(dirtyEndIdx, idx)
+        else
+            dirtyIdx = min(dirtyIdx, idx)
+            dirtyEndIdx = #cbMarks
+        end
+    end
+
+    for line = max(1, start), _end do
+        if codeEndRegex:match_str(vim.fn.getline(line)) then
+            if #getMarks(line - 1, line - 1, {limit = 1}) == 0 then
+                local marks = getMarks(line - 2, 0, {limit = 1})
+                if #marks ~= 0 then
+                    local mark = marks[1]
+                    local idx, _ = table.find(cbMarks, function(cbMark)
+                        return cbMark[1] == mark[1] or cbMark[2] == mark[1]
+                    end)
+                    dirtyIdx = min(dirtyIdx, idx)
+                    dirtyEndIdx = #cbMarks
+                else
+                    dirtyIdx = 1
+                    dirtyEndIdx = #cbMarks
+                    dirtyLine = line
+                    break
+                end
+            end
+        end
+    end
+
+    if dirtyIdx and dirtyEndIdx then
+        local startLine = dirtyLine or getMark(cbMarks[dirtyIdx][1])[1] + 1
+        if dirtyEndIdx == #cbMarks then
+            for i = dirtyIdx, dirtyEndIdx do
+                local cbMark = table.remove(cbMarks, dirtyIdx)
+                deleteMark(cbMark[1])
+                deleteMark(cbMark[2])
+            end
+            generateExtMarks(startLine, vim.fn.line("$"))
+        else
+            local endLine = getMark(cbMarks[dirtyEndIdx][2])[1]
+            for i = dirtyIdx, dirtyEndIdx do
+                local cbMark = cbMarks[i]
+                deleteMark(cbMark[1])
+                deleteMark(cbMark[2])
+            end
+            generateExtMarks(startLine, endLine, dirtyIdx)
+        end
+    end
+end
+
+vim.api.nvim_create_augroup("CodeBlocks", { clear = true })
+
+vim.api.nvim_create_autocmd("BufReadPost", {
+    pattern = "*.md",
+    group = "CodeBlocks",
+    callback = function() generateExtMarks(1, vim.fn.line("$")) end
+})
+
+vim.api.nvim_create_autocmd("TextChangedI", {
+    pattern = "*",
+    group = "CodeBlocks",
+    callback = function()
+        local start = vim.fn.getpos("'[")[2]
+        local _end = vim.fn.line('.')
+        checkLine(min(start, _end), max(start, _end))
+    end
+})
+
+vim.api.nvim_create_autocmd("TextChanged", {
+    pattern = "*",
+    group = "CodeBlocks",
+    callback = function()
+        local start = vim.fn.getpos("'[")[2]
+        local _end = vim.fn.getpos("']")[2]
+        checkLine(min(start, _end), max(start, _end))
+    end
+})
+
+EOF
