@@ -41,6 +41,11 @@ vim.o.listchars = vim.o.listchars .. ",eol:$"
 vim.o.jumpoptions = "stack"
 vim.o.virtualedit = "block"
 
+vim.o.wrap = true
+vim.o.linebreak = true
+vim.o.breakindent = true
+vim.o.breakindentopt = "shift:8"
+
 -- UNDO HISTORY
 vim.o.undofile = true -- keep track of undo after quitting vim
 vim.o.undodir = os.getenv("HOME") .. "/.cache/nvim/undo"  -- store undo history in nvim config

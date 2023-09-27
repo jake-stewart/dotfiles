@@ -25,7 +25,7 @@ return {
                 enable = true,
                 additional_vim_regex_highlighting = false,
                 disable = {
-                    "vim", "css"
+                    "vim", "css", "markdown"
                 },
             },
         })
