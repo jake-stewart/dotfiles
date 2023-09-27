@@ -1,7 +1,7 @@
 let b:editObject = v:null
 
 setlocal nonumber
-setlocal foldcolumn=1
+" setlocal foldcolumn=1
 setlocal nocursorline
 
 augroup CustomMarkdown
