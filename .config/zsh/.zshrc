@@ -43,6 +43,9 @@ SAVEHIST=$HISTSIZE
 export EDITOR=nvim
 export PAGER=nvimpager_wrapper
 
+page() $PAGER
+edit() $EDITOR
+
 # }}}
 # PROGRAM CONFIGS {{{
 
@@ -68,6 +71,8 @@ alias js-beautify='js-beautify -b end-expand'
 
 # fnm
 command-exists "fnm" && eval "$(fnm env --use-on-cd)"
+
+alias npx="EDITOR='$HOME/.config/tmux/popup-nvim.sh' npx"
 
 # time
 [ `uname` = Darwin ] && MAX_MEMORY_UNITS=KB || MAX_MEMORY_UNITS=MB
@@ -113,6 +118,7 @@ bindkey "^?" backward-delete-char
 bindkey -M vicmd gh beginning-of-line
 bindkey -M vicmd gl end-of-line
 bindkey -M vicmd gm vi-match-bracket
+bindkey -M vicmd t vi-yank
 
 # make : act like opening commandline mode
 commandline-mode() {
@@ -163,7 +169,7 @@ bindkey -M vicmd "$" wrap-sub-shell
 # PLUGINS {{{
 
 source "$HOME/.config/zsh/plugins/zsh-system-clipboard/zsh-system-clipboard.zsh"
-source "$HOME/.config/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
+# source "$HOME/.config/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
 source "$HOME/.config/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 
 # }}}
@@ -205,13 +211,13 @@ fi
 # }}}
 # ZSH AUTOSUGGESTIONS SETTINGS {{{
 
-if [ -n "$ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE" ]; then
-    ZSH_AUTOSUGGEST_PARTIAL_ACCEPT_WIDGETS=()
-    ZSH_AUTOSUGGEST_ACCEPT_WIDGETS=()
-
-    ZSH_AUTOSUGGEST_STRATEGY=(history completion)
-    bindkey '^K' autosuggest-accept
-fi
+# if [ -n "$ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE" ]; then
+#     ZSH_AUTOSUGGEST_PARTIAL_ACCEPT_WIDGETS=()
+#     ZSH_AUTOSUGGEST_ACCEPT_WIDGETS=()
+#
+#     ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+#     bindkey '^K' autosuggest-accept
+# fi
 
 # }}}
 # PATH {{{
@@ -266,6 +272,11 @@ skipPostExec() {
 # echo new line after each command
 PostExec() echo
 
+# save history each command
+PreCmd() {
+    fc -W
+}
+
 # ignore the first precmd for post exec since no command has executed
 skipPostExec
 
@@ -285,7 +296,7 @@ accept-math-line() {
 }
 
 accept-line () {
-    if [[ "$BUFFER" =~ "^[0-9()].*" ]]; then
+    if [[ "$BUFFER" =~ "^[0-9].*" ]]; then
         # if the commandline is a mathematical expression, evaluate it
         accept-math-line
     elif [[ "$BUFFER" = "k" ]]; then
@@ -431,6 +442,24 @@ jfind_source() {
 zle -N jfind_source
 bindkey -M vicmd '' jfind_source
 bindkey '' jfind_source
+
+jfind_history() {
+    if [ -n "$TMUX" ]; then
+        ~/.config/tmux/popup-jfind-zsh-history.sh "$BUFFER"
+    else
+        ~/.config/jfind/jfind-zsh-history.sh "$BUFFER"
+    fi
+    output=$(cat ~/.cache/jfind_out)
+    if [ -n "$output" ]; then
+        BUFFER="$output"
+        zle .end-of-line
+        set-keymap vicmd
+    fi
+}
+
+zle -N jfind_history
+bindkey -M vicmd '' jfind_history
+bindkey '' jfind_history
 
 # }}}
 # WHATIS {{{

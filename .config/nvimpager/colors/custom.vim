@@ -13,7 +13,8 @@ set notermguicolors
 let s:bg     = "NONE"
 let s:fg     = "NONE"
 
-let s:white  = "white"
+let s:white  = "231"
+let s:bright = "white"
 let s:cyan   = "darkcyan"
 let s:orange = "darkyellow"
 let s:red    = "darkred"
@@ -21,6 +22,7 @@ let s:green  = "darkgreen"
 let s:yellow = "yellow"
 let s:blue   = "darkblue"
 let s:purple = "darkmagenta"
+let s:grey   = "gray"
 
 let s:grey_0 = "233"
 let s:grey_1 = "234"
@@ -28,10 +30,7 @@ let s:grey_2 = "235"
 let s:grey_3 = "236"
 let s:grey_4 = "237"
 let s:grey_5 = "238"
-
-let s:warn    = "darkyellow"
-let s:error   = "darkred"
-let s:debug   = "201"
+let s:grey_6 = "240"
 
 " }}}
 " HL FUNCTION {{{
@@ -48,7 +47,7 @@ endfunction
 
 call HL("Normal",                   s:fg,     s:bg,     "NONE")
 call HL("Conceal",                  s:fg,     "NONE",   "NONE")
-call HL("Cursor",                   s:bg,     s:fg,     "NONE")
+call HL("Cursor",                   "NONE",   "NONE",   "NONE")
 call HL("CursorLine",               "NONE",   s:grey_0, "NONE")
 call HL("CursorColumn",             "NONE",   s:grey_0, "NONE")
 call HL("SignColumn",               "NONE",   "NONE",   "NONE")
@@ -62,11 +61,11 @@ call HL("Search",                   "NONE",   s:grey_1, "NONE")
 call HL("ModeMsg",                  "NONE",   "NONE",   "NONE")
 call HL("NonText",                  s:grey_2, "NONE",   "NONE")
 call HL("Question",                 s:purple, "NONE",   "NONE")
-call HL("SpecialKey",               s:debug,  "NONE",   "NONE")
+call HL("SpecialKey",               s:purple, "NONE",   "NONE")
 call HL("StatusLine",               s:fg,     s:grey_1, "NONE")
 call HL("StatusLineNC",             s:grey_5, s:grey_1, "NONE")
 call HL("Title",                    s:green,  "NONE",   "BOLD")
-call HL("Visual",                   "NONE",   s:grey_1, "NONE")
+call HL("Visual",                   "NONE",   s:grey_2, "NONE")
 call HL("WarningMsg",               s:yellow, "NONE",   "NONE")
 call HL("Pmenu",                    "NONE",   s:grey_1, "NONE")
 call HL("PmenuSel",                 s:fg,     s:grey_3, "NONE")
@@ -75,23 +74,23 @@ call HL("PmenuSbar",                "NONE",   s:grey_1, "NONE")
 call HL("CocMenu",                  s:fg,     "NONE",   "NONE")
 call HL("CocMenuSel",               s:fg,     s:grey_3, "NONE")
 call HL("CocFadeout",               s:grey_5, "NONE",   "NONE")
-call HL("CocWarningSign",           s:warn,   "NONE",   "NONE")
+call HL("CocWarningSign",           s:orange, "NONE",   "NONE")
 call HL("DiffDelete",               s:red,    "NONE",   "NONE")
 call HL("DiffAdd",                  s:green,  "NONE",   "NONE")
 call HL("DiffChange",               s:yellow, "NONE",   "BOLD")
 call HL("DiffText",                 s:bg,     s:fg,     "NONE")
 call HL("Underlined",               "NONE",   "NONE",   "UNDERLINE")
-call HL("OperatorSandwichChange",   "NONE",   s:debug,  "NONE")
-call HL("Comment",                  s:grey_5, "NONE",   "ITALIC")
+call HL("OperatorSandwichChange",   "NONE",   s:purple, "NONE")
+call HL("Comment",                  s:grey_5,   "NONE",   "ITALIC")
 call HL("Exception",                s:cyan,   "NONE",   "NONE")
 call HL("Constant",                 s:cyan,   "NONE",   "NONE")
 call HL("Float",                    s:orange, "NONE",   "NONE")
 call HL("Number",                   s:orange, "NONE",   "NONE")
 call HL("Boolean",                  s:orange, "NONE",   "NONE")
-call HL("Identifier",               s:red,    "NONE",   "NONE")
-call HL("Keyword",                  s:red,    "NONE",   "NONE")
-call HL("Error",                    s:error,  "NONE",   "NONE")
-call HL("ErrorMsg",                 s:error,  "NONE",   "NONE")
+call HL("Identifier",               "NONE",   "NONE",   "NONE")
+call HL("Keyword",                  s:purple, "NONE",   "NONE")
+call HL("Error",                    s:red,    "NONE",   "NONE")
+call HL("ErrorMsg",                 s:red,    "NONE",   "NONE")
 call HL("String",                   s:green,  "NONE",   "NONE")
 call HL("Character",                s:green,  "NONE",   "NONE")
 call HL("PreProc",                  s:yellow, "NONE",   "NONE")
@@ -113,85 +112,76 @@ call HL("Operator",                 s:purple, "NONE",   "NONE")
 call HL("MatchParen",               s:purple, s:grey_1, "NONE")
 call HL("TabLine",                  s:fg,     s:grey_1, "NONE")
 call HL("TabLineFill",              "NONE",   s:grey_1, "NONE")
-call HL("TabLineSel",               s:white,  s:grey_1, "NONE")
+call HL("TabLineSel",               s:bright, s:grey_1, "NONE")
 call HL("Directory",                s:blue,   "NONE",   "NONE")
-call HL("TSAnnotation",             s:fg,     "NONE",   "NONE")
-call HL("TSAttribute",              s:fg,     "NONE",   "NONE")
-call HL("TSBoolean",                s:orange, "NONE",   "NONE")
-call HL("TSCharacter",              s:orange, "NONE",   "NONE")
-call HL("TSComment",                s:grey_5, "NONE",   "italic")
-call HL("TSConditional",            s:purple, "NONE",   "NONE")
-call HL("TSConstant",               s:cyan,   "NONE",   "NONE")
-call HL("TSConstBuiltin",           s:cyan,   "NONE",   "NONE")
-call HL("TSConstMacro",             s:orange, "NONE",   "NONE")
-call HL("TSConstructor",            s:yellow, "NONE",   "NONE")
-call HL("TSError",                  s:fg,     "NONE",   "NONE")
-call HL("TSException",              s:purple, "NONE",   "NONE")
-call HL("TSField",                  s:fg,     "NONE",   "NONE")
-call HL("TSFloat",                  s:orange, "NONE",   "NONE")
-call HL("TSFunction",               s:blue,   "NONE",   "NONE")
-call HL("TSFuncBuiltin",            s:blue,   "NONE",   "NONE")
-call HL("TSFuncMacro",              s:blue,   "NONE",   "NONE")
-call HL("TSInclude",                s:purple, "NONE",   "NONE")
-call HL("TSKeyword",                s:purple, "NONE",   "NONE")
-call HL("TSKeywordFunction",        s:purple, "NONE",   "NONE")
-call HL("TSKeywordOperator",        s:purple, "NONE",   "NONE")
-call HL("TSLabel",                  s:red,    "NONE",   "NONE")
-call HL("TSMethod",                 s:blue,   "NONE",   "NONE")
-call HL("TSNamespace",              s:yellow, "NONE",   "NONE")
-call HL("TSNone",                   s:fg,     "NONE",   "NONE")
-call HL("TSNumber",                 s:orange, "NONE",   "NONE")
-call HL("TSOperator",               s:fg,     "NONE",   "NONE")
-call HL("TSParameter",              s:fg,     "NONE",   "NONE")
-call HL("TSParameterReference",     s:fg,     "NONE",   "NONE")
-call HL("TSProperty",               s:cyan,   "NONE",   "NONE")
-call HL("TSPunctDelimiter",         s:fg,     "NONE",   "NONE")
-call HL("TSPunctBracket",           s:fg,     "NONE",   "NONE")
-call HL("TSPunctSpecial",           s:red,    "NONE",   "NONE")
-call HL("TSRepeat",                 s:purple, "NONE",   "NONE")
-call HL("TSString",                 s:green,  "NONE",   "NONE")
-call HL("TSStringRegex",            s:orange, "NONE",   "NONE")
-call HL("TSStringEscape",           s:red,    "NONE",   "NONE")
-call HL("TSSymbol",                 s:cyan,   "NONE",   "NONE")
-call HL("TSTag",                    s:red,    "NONE",   "NONE")
-call HL("TSTagDelimiter",           s:red,    "NONE",   "NONE")
-call HL("TSText",                   s:fg,     "NONE",   "NONE")
-call HL("TSStrong",                 s:fg,     "NONE",   "bold")
-call HL("TSEmphasis",               s:fg,     "NONE",   "italic")
-call HL("TSUnderline",              s:fg,     "NONE",   "underline")
-call HL("TSStrike",                 s:fg,     "NONE",   "strikethrough")
-call HL("TSTitle",                  s:orange, "NONE",   "bold")
-call HL("TSLiteral",                s:green,  "NONE",   "NONE")
-call HL("TSURI",                    s:cyan,   "NONE",   "underline")
-call HL("TSMath",                   s:fg,     "NONE",   "NONE")
-call HL("TSTextReference",          s:blue,   "NONE",   "NONE")
-call HL("TSEnviroment",             s:fg,     "NONE",   "NONE")
-call HL("TSEnviromentName",         s:fg,     "NONE",   "NONE")
-call HL("TSNote",                   s:fg,     "NONE",   "NONE")
-call HL("TSWarning",                s:fg,     "NONE",   "NONE")
-call HL("TSDanger",                 s:fg,     "NONE",   "NONE")
-call HL("TSType",                   s:red,    "NONE",   "NONE")
-call HL("TSTypeBuiltin",            s:orange, "NONE",   "NONE")
-call HL("TSVariable",               s:fg,     "NONE",   "NONE")
-call HL("TSVariableBuiltin",        s:red,    "NONE",   "NONE")
-call HL("DiagnosticError",          s:error,  "NONE",   "NONE")
+
+call HL("@boolean",          s:orange,  "NONE", "NONE")
+call HL("@character",        s:orange,  "NONE", "NONE")
+call HL("@comment",          s:grey_5,  "NONE", "italic")
+call HL("@conditional",      s:purple,  "NONE", "NONE")
+call HL("@constant",         s:cyan,    "NONE", "NONE")
+call HL("@constant.builtin", s:cyan,    "NONE", "NONE")
+call HL("@constant.macro",   s:orange,  "NONE", "NONE")
+call HL("@constructor",      "NONE",    "NONE", "NONE")
+call HL("@exception",        s:purple,  "NONE", "NONE")
+call HL("@field",            s:white,   "NONE", "NONE")
+call HL("@float",            s:orange,  "NONE", "NONE")
+call HL("@function",         s:blue,    "NONE", "NONE")
+call HL("@function.builtin", s:blue,    "NONE", "NONE")
+call HL("@function.macro",   s:blue,    "NONE", "NONE")
+call HL("@include",          s:purple,  "NONE", "NONE")
+call HL("@keyword",          s:purple,  "NONE", "NONE")
+call HL("@label",            s:red,     "NONE", "NONE")
+call HL("@method",           s:blue,    "NONE", "NONE")
+call HL("@number",           s:orange,  "NONE", "NONE")
+call HL("@operator",         s:purple,  "NONE", "NONE")
+call HL("@parameter",        s:white,   "NONE", "NONE")
+call HL("@property",         s:white,   "NONE", "NONE")
+call HL("@punctuation",      s:white,   "NONE", "NONE")
+call HL("@repeat",           s:purple,  "NONE", "NONE")
+call HL("@string",           s:green,   "NONE", "NONE")
+call HL("@string.escape",    s:grey_6,  "NONE", "NONE")
+call HL("@type",             "NONE",    "NONE", "NONE")
+call HL("@type.builtin",     s:yellow,  "NONE", "NONE")
+call HL("@type.qualifier",   s:yellow,  "NONE", "NONE")
+call HL("@type.definition",  s:red,     "NONE", "NONE")
+call HL("@variable",         s:white,   "NONE", "NONE")
+call HL("@variable.builtin", s:white,   "NONE", "NONE")
+call HL("@tag",              s:red,     "NONE", "NONE")
+call HL("@tag.delimiter",    s:grey_6,  "NONE", "NONE")
+call HL("@tag.attribute",    s:yellow,  "NONE", "NONE")
+
+call HL("DiagnosticError",          s:red,    "NONE",   "NONE")
 call HL("DiagnosticHint",           s:grey_5, "NONE",   "NONE")
 call HL("DiagnosticInfo",           s:grey_5, "NONE",   "NONE")
-call HL("DiagnosticWarn",           s:warn,   "NONE",   "NONE")
-call HL("DiagnosticUnderlineError", s:error,  "NONE",   "underline")
-call HL("DiagnosticUnderlineHint",  s:grey_5, "NONE",   "underline")
-call HL("DiagnosticUnderlineInfo",  s:grey_5, "NONE",   "underline")
-call HL("DiagnosticUnderlineWarn",  s:warn,   "NONE",   "underline")
-call HL("Border",                   s:grey_2, "NONE",   "NONE")
+call HL("DiagnosticWarn",           s:orange, "NONE",   "NONE")
+call HL("DiagnosticUnderlineError", s:red,    "NONE",   "NONE")
+call HL("DiagnosticUnderlineHint",  s:grey_5, "NONE",   "NONE")
+call HL("DiagnosticUnderlineInfo",  s:grey_5, "NONE",   "NONE")
+call HL("DiagnosticUnderlineWarn",  s:orange, "NONE",   "NONE")
+call HL("Border",                   s:grey_3, "NONE",   "NONE")
+" call HL("NormalFloat",              "NONE",   "NONE",   "NONE")
+
+call HL("CmpItemAbbrDeprecated",    s:grey_5, "NONE",   "strikethrough")
+call HL("CmpItemKindText",          s:grey_5, "NONE",   "NONE")
+call HL("CmpItemKindMethod",        s:blue,   "NONE",   "NONE")
+call HL("CmpItemKindFunction",      s:blue,   "NONE",   "NONE")
+call HL("CmpItemKindInterface",     s:yellow, "NONE",   "NONE")
+call HL("CmpItemKindClass",         s:yellow, "NONE",   "NONE")
+call HL("CmpItemKindStruct",        s:yellow, "NONE",   "NONE")
+call HL("CmpItemKindConstant",      s:cyan,   "NONE",   "NONE")
+call HL("CmpItemKindVariable",      s:purple, "NONE",   "NONE")
+call HL("CmpItemMenu",              s:grey_5, "NONE",   "NONE")
 
 " exe "hi SpellCap gui=UNDERCURL guisp=" . s:yellow
 " exe "hi SpellBad gui=UNDERCURL guisp=" . s:red
 exe "hi SpellCap gui=UNDERCURL guifg=" . s:yellow
 exe "hi SpellBad gui=UNDERCURL guifg=" . s:red
 
+call HL("BqfPreviewFloat", "NONE", "232", "NONE")
+call HL("QuickFixLine", "NONE", "NONE", "bold")
 hi default link BqfPreviewBorder Border
-hi default link BqfPreviewFloat  Normal
-hi default link BqfPreviewCursor Cursor
+" call HL("BqfPreviewCursor", "NONE", "NONE", "NONE")
 hi default link BqfPreviewRange  IncSearch
 
 " }}}

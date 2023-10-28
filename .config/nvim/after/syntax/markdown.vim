@@ -1,6 +1,6 @@
-
 setlocal conceallevel=2
 
+syn case match
 
 syn match MarkdownLink /^\s*\[[^\[\]]*\]([a-zA-Z0-9._\/ -]\+)$/
 syn match MarkdownLinkText /\[[^\[\]]*\]([a-zA-Z0-9._\/ -]\+)$/ contained containedin=MarkdownLink
@@ -29,14 +29,16 @@ syn match MarkdownHeadingJunk /^#\+ / contained conceal
             \ containedin=MarkdownHeading1,MarkdownHeading2,MarkdownHeading3
 syn match Error /^##\? .*/
 
-syn region MarkdownCode start=/^```.*$/ end=/^```$/
-            \ contains=MarkdownCodeJunk keepend
-syn match MarkdownCodeJunk /^```.*$/ contained
-            \ containedin=MarkdownCode,MarkdownPythonCode,MarkdownCppCode,MarkdownJsCode conceal
+syn region MarkdownCode start=/^```.*$/ end=/^```$/ keepend
+            \ contains=MarkdownCodeJunk
+
+syn match MarkdownCodeJunk /^```.*$/ contained conceal
 
 syn region MarkdownPythonCode start=/^```python$/ end=/^```$/
-            \ contained containedin=MarkdownCode
+            \ contained containedin=MarkdownCode contains=MarkdownCodeJunk
 syn region String start=/"/ end=/"/ skip=/\\"/
+            \ contained containedin=MarkdownPythonCode
+syn region String start=/"""/ end=/"""/
             \ contained containedin=MarkdownPythonCode
 syn region String start=/'/ end=/'/ skip=/\\'/
             \ contained containedin=MarkdownPythonCode
@@ -49,7 +51,7 @@ syn keyword Constant None
             \ contained containedin=MarkdownPythonCode
 syn match Number /\d\+\.\?/
             \ contained containedin=MarkdownPythonCode
-syn match Operator /[/+*%&|<>^-]/
+syn match Operator /[/+*%&|<>^=-]/
             \ contained containedin=MarkdownPythonCode
 syn match Function /[a-zA-Z_]\+[a-zA-Z_0-9]*\s*\ze(/
             \ contained containedin=MarkdownPythonCode
@@ -59,7 +61,7 @@ syn match Comment /#.*$/
             \ contained containedin=MarkdownPythonCode
 
 syn region MarkdownCppCode start=/^```c\(++\)\?$/ end=/^```$/
-            \ contained containedin=MarkdownCode
+            \ contained containedin=MarkdownCode contains=MarkdownCodeJunk
 syn region String start=/"/ end=/"/ skip=/\\"/
             \ contained containedin=MarkdownCppCode
 syn region String start=/'/ end=/'/ skip=/\\'/
@@ -75,7 +77,7 @@ syn keyword Constant nullptr NULL std
             \ contained containedin=MarkdownCppCode
 syn match Number /\d\+\.\?/
             \ contained containedin=MarkdownCppCode
-syn match Operator /[/+*%&|<>^-]/
+syn match Operator /[/+*%&|<>^=-]/
             \ contained containedin=MarkdownCppCode
 syn match Function /[a-zA-Z_]\+[a-zA-Z_0-9]*\s*\ze(/
             \ contained containedin=MarkdownCppCode
@@ -88,13 +90,11 @@ syn region Comment start=/\/\*/ end=/\*\//
             \ contained containedin=MarkdownCppCode
 
 syn region MarkdownJsCode start=/^```\(javascript\|typescript\)$/ end=/^```$/
-            \ contained containedin=MarkdownCode
+            \ contained containedin=MarkdownCode contains=MarkdownCodeJunk
 syn region String start=/"/ end=/"/ skip=/\\"/
             \ contained containedin=MarkdownJsCode
 syn region String start=/'/ end=/'/ skip=/\\'/
             \ contained containedin=MarkdownJsCode
-" syn region String start=/`/ end=/`/ skip=/\\`/
-"             \ contained containedin=MarkdownJsCode
 syn keyword Keyword if while for or and return continue break
             \ try catch else class enum interface type extends require
             \ import from implements function const let var throw new
@@ -103,7 +103,7 @@ syn keyword Boolean true false null undefined
             \ contained containedin=MarkdownJsCode
 syn match Number /\d\+\.\?/
             \ contained containedin=MarkdownJsCode
-syn match Operator /[/+*%&|<>^-]/
+syn match Operator /[/+*%&|<>^=-]/
             \ contained containedin=MarkdownJsCode
 syn match Function /[a-zA-Z_]\+[a-zA-Z_0-9]*\s*\ze(/
             \ contained containedin=MarkdownJsCode
@@ -113,5 +113,50 @@ syn match Comment /\/\/.*$/
             \ contained containedin=MarkdownJsCode
 syn region Comment start=/\/\*/ end=/\*\//
             \ contained containedin=MarkdownJsCode
+
+syn region MarkdownShCode start=/^```\(sh\|bash\|zsh\|shell\)$/ end=/^```$/
+            \ contained containedin=MarkdownCode contains=MarkdownCodeJunk
+syn match Function /\v(([;&|]|^|<(do|if|while|in)>)\s*)@<=[a-zA-Z0-9_-]+/
+            \ contained containedin=MarkdownShCode
+syn region MarkdownShString start=/"/ end=/"/ skip=/\\"/
+            \ contained containedin=MarkdownShCode
+syn match Normal /\\./
+            \ contained containedin=MarkdownShCode
+hi link MarkdownShString String
+syn region String start=/'/ end=/'/
+            \ contained containedin=MarkdownShCode
+syn keyword Keyword while for in do done if elif else fi case esac
+            \ contained containedin=MarkdownShCode
+syn keyword Boolean true false
+            \ contained containedin=MarkdownShCode
+syn match Number /\d\+\.\?/
+            \ contained containedin=MarkdownShCode
+syn match Operator /[/*|&!<>=$(){}]/
+            \ contained containedin=MarkdownShCode
+syn match Constant /\$[a-zA-Z0-9_]\+/
+            \ contained containedin=MarkdownShCode,MarkdownShString
+syn match Comment /#.*$/
+            \ contained containedin=MarkdownShCode
+
+syn region MarkdownLuaCode start=/^```lua$/ end=/^```$/
+            \ contained containedin=MarkdownCode contains=MarkdownCodeJunk
+syn region String start=/"/ end=/"/ skip=/\\"/
+            \ contained containedin=MarkdownLuaCode
+syn region String start=/'/ end=/'/ skip=/\\'/
+            \ contained containedin=MarkdownLuaCode
+syn keyword Keyword if elseif else while for function end in
+            \ contained containedin=MarkdownLuaCode
+syn keyword Boolean true false nil
+            \ contained containedin=MarkdownLuaCode
+syn match Number /\d\+\.\?/
+            \ contained containedin=MarkdownLuaCode
+syn match Operator /[/+*%&|<>^~=-]/
+            \ contained containedin=MarkdownLuaCode
+syn match Function /[a-zA-Z_]\+[a-zA-Z_0-9]*\s*\ze(/
+            \ contained containedin=MarkdownLuaCode
+syn match Comment /--.*$/
+            \ contained containedin=MarkdownLuaCode
+syn region Comment start=/--\[\[*/ end=/\]\]/
+            \ contained containedin=MarkdownLuaCode
 
 hi link MarkdownCodeJunk Comment

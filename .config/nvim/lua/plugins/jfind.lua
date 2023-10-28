@@ -1,3 +1,5 @@
+local preview = "bat --color always --theme custom --style plain"
+
 return {
     "jake-stewart/jfind.nvim", branch = "2.0",
     keys = {
@@ -5,7 +7,7 @@ return {
             local Key = require("jfind.key")
             require("jfind").findFile({
                 formatPaths = true,
-                preview = true,
+                preview = preview,
                 previewPosition = "right",
                 previewPercent = 0.6,
                 previewMinWidth = 60,
@@ -27,7 +29,7 @@ return {
                 include = {},
                 query = "",
                 hidden = true,
-                preview = true,
+                preview = preview,
                 previewPosition = "bottom",
                 queryPosition = "top",
                 caseSensitivity = "smart",
@@ -38,12 +40,41 @@ return {
                 }
             })
         end},
+
+        {"<leader><c-a>", function()
+            local jfind = require("jfind")
+            local Key = require("jfind.key")
+            jfind.liveGrep({
+                exclude = {".git"},
+                include = {},
+                query = "",
+                hidden = true,
+                preview = preview,
+                previewPosition = "bottom",
+                queryPosition = "top",
+                caseSensitivity = "smart",
+                selectAll = true,
+                callback = {
+                    [Key.DEFAULT] = function(results)
+                        local qflist = {};
+                        for i, v in pairs(results) do
+                            qflist[i] = {filename = v[1], lnum = v[2]}
+                        end
+                        if results[1] then
+                            jfind.editGotoLine(results[1][1], results[1][2])
+                        end
+                        vim.fn.setqflist(qflist)
+                    end,
+                }
+            })
+        end},
     },
     config = function()
         require("jfind").setup({
             exclude = {
                 ".git*",
                 ".idea",
+                ".cache",
                 ".vscode",
                 ".settings",
                 ".classpath",

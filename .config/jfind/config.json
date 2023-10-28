@@ -5,7 +5,7 @@
     "matcher": "fuzzy",
     "case_mode": "insensitive",
     "window_style": "merged",
-    "wrap_item_list": true,
+    "wrap_item_list": false,
     "style": {
         "active_item": {
             "fg": "bright_white",

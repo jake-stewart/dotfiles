@@ -129,8 +129,8 @@ def preparePopup(script, filename):
 
     image = Image.open(filename)
 
-    max_width = min(120, client_width)
-    max_height = min(30, client_height)
+    max_width = min(200, client_width)
+    max_height = min(50, client_height)
 
     grid_width, grid_height = gridFitImage(
             image.width, image.height, max_width, max_height)
@@ -165,6 +165,8 @@ if __name__ == "__main__":
     if sys.argv[1] == "popup":
         preparePopup(os.path.abspath(sys.argv[0]),
             os.path.abspath(sys.argv[2]))
+    if sys.argv[1] == "print":
+        print(allocateImageSpace(20, 10), end="")
     if sys.argv[1] == "pane":
         preparePane(os.path.abspath(sys.argv[2]))
     elif sys.argv[1] == "display":

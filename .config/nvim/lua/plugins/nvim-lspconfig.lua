@@ -2,20 +2,26 @@ return {
     'neovim/nvim-lspconfig',
     dependencies = { 'hrsh7th/nvim-cmp' },
     ft = {
-        -- "cs",
+        "c",
         "cpp",
         "java",
         "python",
         "typescript",
         "typescriptreact",
         "javascript",
+        -- "cs",
         "php",
         "blade",
         "lua",
     },
     config = function()
-        local capabilities = require('cmp_nvim_lsp').default_capabilities()
-        capabilities.textDocument.completion.completionItem.snippetSupport = false
+        local success, result = pcall(function()
+            return require('cmp_nvim_lsp').default_capabilities()
+        end)
+        local capabilities = success and result or {}
+        if (success) then
+            capabilities.textDocument.completion.completionItem.snippetSupport = false
+        end
 
         local on_attach = function(client, bufnr, opts)
             client.server_capabilities.semanticTokensProvider = nil;
@@ -29,7 +35,7 @@ return {
             vim.keymap.set('n', '<leader>r', vim.lsp.buf.rename, bufopts)
             vim.keymap.set('n', '<c-r>', vim.cmd.LspRestart, bufopts)
             vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, bufopts)
-            vim.keymap.set('n', '<c-k>', function()
+            vim.keymap.set('n', '<up>', function()
                 vim.diagnostic.open_float(nil, { focusable = false })
             end, bufopts)
 
@@ -41,6 +47,7 @@ return {
         local function setup(server, opts)
             require('lspconfig')[server].setup({
                 capabilities = capabilities,
+                inlay_hints = { enabled = false },
                 on_attach = function(client, bufnr)
                     on_attach(client, bufnr, opts)
                 end,
@@ -57,7 +64,9 @@ return {
         setup("jdtls", cStyleComment)
         setup("tsserver", cStyleComment)
         setup("intelephense", cStyleComment)
-        setup("lua_ls", {})
+        -- setup("csharp_ls", cStyleComment)
+        setup("lua_ls", {
+        })
         setup("pyright", {})
     end,
 }

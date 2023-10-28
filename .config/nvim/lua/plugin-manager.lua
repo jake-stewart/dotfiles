@@ -31,7 +31,7 @@ require("lazy").setup("plugins", {
             reset = true,
             disabled_plugins = {
                 "gzip",
-                "netrwPlugin",
+                -- "netrwPlugin",
                 "tarPlugin",
                 "tohtml",
                 "tutor",

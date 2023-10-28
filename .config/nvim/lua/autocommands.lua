@@ -1,19 +1,43 @@
-local augroup = vim.api.nvim_create_augroup
-local autocmd = vim.api.nvim_create_autocmd
+vim.api.nvim_create_augroup("NvimCustomAutocommands", {clear=true})
 
-augroup("NvimCustomAutocommands", {clear=true})
+-- vim.api.nvim_create_user_command(
+--     "Ex",
+--     function()
+--         if vim.bo.modified then
+--             print("First save your file")
+--         else
+--             vim.cmd("Explore")
+--         end
+--     end,
+--     {}
+-- )
 
 -- remove auto commenting
-autocmd("FileType", {
+vim.api.nvim_create_autocmd("BufEnter", {
     pattern = "*",
     group = "NvimCustomAutocommands",
     callback = function()
-        vim.cmd [[ setlocal fo-=c fo-=r fo-=o ]]
+        local fo = vim.bo.fo
+        fo = fo:gsub("c", "")
+        fo = fo:gsub("r", "")
+        fo = fo:gsub("o", "")
+        vim.bo.fo = fo
+        -- print("hi", vim.bo.fo)
     end
 })
 
+vim.api.nvim_create_augroup("PythonIndent", {clear=true})
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = "python",
+    group = "PythonIndent",
+    callback = function()
+        vim.bo.shiftwidth = 2
+    end
+})
+
+
 -- -- remove line numbers in terminal & start insert
--- autocmd("TermOpen", {
+-- vim.api.nvim_create_autocmd("TermOpen", {
 --     pattern = "*",
 --     group = "NvimCustomAutocommands",
 --     callback = function()
@@ -22,7 +46,7 @@ autocmd("FileType", {
 --     end
 -- })
 -- 
--- autocmd("TermClose", {
+-- vim.api.nvim_create_autocmd("TermClose", {
 --     pattern = "*",
 --     group = "NvimCustomAutocommands",
 --     callback = function()
@@ -31,7 +55,7 @@ autocmd("FileType", {
 -- })
 
 -- restore cursor position
-autocmd("BufReadPost", {
+vim.api.nvim_create_autocmd("BufReadPost", {
     pattern = "*",
     group = "NvimCustomAutocommands",
     callback = function()
@@ -45,7 +69,7 @@ autocmd("BufReadPost", {
 })
 
 -- comment string
-autocmd("FileType", {
+vim.api.nvim_create_autocmd("FileType", {
     pattern = "c,cpp,cs,java,php",
     group = "NvimCustomAutocommands",
     callback = function()
@@ -54,14 +78,14 @@ autocmd("FileType", {
 })
 
 -- tablescript
-autocmd("BufNewFile", {
+vim.api.nvim_create_autocmd("BufNewFile", {
     pattern = "*.tbl",
     group = "NvimCustomAutocommands",
     callback = function()
         vim.cmd.setf("tablescript")
     end
 })
-autocmd("BufRead", {
+vim.api.nvim_create_autocmd("BufRead", {
     pattern = "*.tbl",
     group = "NvimCustomAutocommands",
     callback = function()

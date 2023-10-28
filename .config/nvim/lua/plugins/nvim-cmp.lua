@@ -12,31 +12,31 @@ return {
         local cmp = require('cmp')
 
         local item_icons = {
-            Text = " ",
-            Method = "m",
-            Function = "f",
-            Constructor = "c",
-            Field = "f",
-            Variable = "v",
+            Field = "V",
+            Variable = "V",
+            Property = "V",
+            Constant = "V",
+            EnumMember = "V",
+            Enum = "E",
             Class = "C",
             Interface = "I",
-            Module = "M",
-            Property = "p",
-            Unit = "u",
-            Value = " ",
-            Enum = "E",
-            Keyword = "k",
-            Snippet = " ",
-            Color = "c",
-            File = "F",
-            Reference = "r",
-            Folder = "D",
-            EnumMember = "E",
-            Constant = "c",
             Struct = "S",
-            Event = "e",
-            Operator = "o",
-            TypeParameter = "t"
+            Method = "F",
+            Function = "F",
+            Constructor = "F",
+            Text = " ",
+            Module = " ",
+            Unit = " ",
+            Value = " ",
+            Keyword = " ",
+            Snippet = "*",
+            Color = " ",
+            File = " ",
+            Reference = " ",
+            Folder = " ",
+            Event = " ",
+            Operator = " ",
+            TypeParameter = " "
         }
 
         local item_sources = {
@@ -45,17 +45,23 @@ return {
             nvim_lua = "[LUA]",
         }
 
+        local winhighlight
+            = "Normal:Pmenu,FloatBorder:Pmenu,CursorLine:PmenuSel,Search:None"
+
         cmp.setup({
             mapping = cmp.mapping.preset.insert({
-                ['<C-K>'] = cmp.mapping.confirm({ select = false }),
+                ['<up>'] = cmp.mapping.confirm({ select = false }),
             }),
-            Window = {
-                completion = cmp.config.window.bordered({
-                    winhighlight = "Normal:CmpPmenu,CursorLine:CursorLine,Search:None",
-                }),
-                documentation = cmp.config.window.bordered({
-                    winhighlight = "Normal:CmpPmenu,CursorLine:CursorLine,Search:None",
-                }),
+            window = {
+                completion = {
+                    winhighlight = winhighlight,
+                    max_height = 10,
+                    scrollbar = false,
+                },
+                documentation = {
+                    winhighlight = winhighlight,
+                    scrollbar = false,
+                },
             },
             sources = cmp.config.sources(
             {

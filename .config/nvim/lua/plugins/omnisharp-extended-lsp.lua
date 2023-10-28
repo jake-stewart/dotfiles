@@ -1,5 +1,6 @@
 return {
     'Hoffs/omnisharp-extended-lsp.nvim',
+    enabled = true,
     dependencies = { 'neovim/nvim-lspconfig', 'hrsh7th/nvim-cmp' },
     ft = "cs",
     config = function()
@@ -20,11 +21,6 @@ return {
             end, bufopts)
             -- vim.keymap.set('i', '<c-k>', vim.lsp.buf.signature_help, bufopts);
         end
-
-        local lsp_setup = {
-            capabilities = capabilities,
-            on_attach = on_attach,
-        }
 
         require('lspconfig').omnisharp.setup({
             cmd = {
