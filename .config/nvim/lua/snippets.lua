@@ -14,7 +14,7 @@ snippet("<c-p>", "()<left>")
 -- filetype snippets
 local function ftSnippet(key)
     return function(output)
-        snippet(key, output, {buffer = true})
+        bufferSnippet(key, output)
     end
 end
 
