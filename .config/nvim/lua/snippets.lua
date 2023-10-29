@@ -203,39 +203,39 @@ autocmd("FileType", {
 
 augroup("RustSnippets", { clear = true })
 autocmd("FileType", {
-	pattern = "rust",
-	group = "RustSnippets",
-	callback = function()
-		printLineSnippet('println!("");<esc>hhhi')
-		debugSnippet("dbg!(&);<esc>hi")
-		whileLoopSnippet("while  {<CR>}<esc>k$hhi")
-		forLoopSnippet("for  in  {<CR>}<esc>k$hhhi")
-		ifStatementSnippet("if  {<CR>}<esc>k$hhi")
-		elseIfStatementSnippet("else if  {<CR>}<esc>k$hhi")
-		elseStatementSnippet("else {<CR>}<esc>O")
-		switchSnippet("match  {<CR>}<esc>k$hhi")
-		enumSnippet("enum  {<CR>}<esc>k$hi")
-		structSnippet("struct  {<CR>}<esc>k$hi")
-		functionSnippet("fn () {<CR>}<esc>k$F(i")
-	end,
+    pattern = "rust",
+    group = "RustSnippets",
+    callback = function()
+        printLineSnippet('println!("");<esc>$F"i')
+        debugSnippet("dbg!(&);<esc>hi")
+        whileLoopSnippet("while  {<CR>}<esc>k$hi")
+        forLoopSnippet("for  {<CR>}<esc>k$hi")
+        ifStatementSnippet("if  {<CR>}<esc>k$hi")
+        elseIfStatementSnippet("else if  {<CR>}<esc>k$hi")
+        elseStatementSnippet("else {<CR>}<esc>O")
+        switchSnippet("match  {<CR>}<esc>k$hi")
+        enumSnippet("enum  {<CR>}<esc>k$hi")
+        structSnippet("struct  {<CR>}<esc>k$hi")
+        functionSnippet("fn () {<CR>}<esc>k$F(i")
+    end,
 })
 
 augroup("GoSnippets", { clear = true })
 autocmd("FileType", {
-	pattern = "go",
-	group = "GoSnippets",
-	callback = function()
-		printLineSnippet('fmt.Println("")<esc>hhhi')
-		debugSnippet("fmt.Println();<esc>hi")
-		whileLoopSnippet("for  {<CR>}<esc>k$hhi")
-		forLoopSnippet("for i := 0; i < ; i++ {<CR>}<esc>k$hhi")
-		ifStatementSnippet("if  {<CR>}<esc>k$hhi")
-		elseIfStatementSnippet("else if  {<CR>}<esc>k$hhi")
-		elseStatementSnippet("else {<CR>}<esc>O")
-		switchSnippet("switch  {<CR>}<esc>k$hhi")
-		caseSnippet("case :<CR>fallthrough<esc>k$bbi")
-		defaultCaseSnippet("default:<CR><esc>O")
-		functionSnippet("func () {<CR>}<esc>k$F(i")
-		structSnippet("type  struct {<CR>}<esc>k$hi")
-	end,
+    pattern = "go",
+    group = "GoSnippets",
+    callback = function()
+        printLineSnippet('fmt.Println("")<esc>hi')
+        debugSnippet("fmt.Println()<esc>i")
+        whileLoopSnippet("for  {<CR>}<esc>k$hi")
+        forLoopSnippet("for  {<CR>}<esc>k$hi")
+        ifStatementSnippet("if  {<CR>}<esc>k$hi")
+        elseIfStatementSnippet("else if  {<CR>}<esc>k$hi")
+        elseStatementSnippet("else {<CR>}<esc>O")
+        switchSnippet("switch  {<CR>}<esc>k$hi")
+        caseSnippet("case :<CR>fallthrough<esc>k$i")
+        defaultCaseSnippet("default:<esc>O")
+        functionSnippet("func () {<CR>}<esc>k$F(i")
+        structSnippet("type  struct {<CR>}<esc>k$bhi")
+    end,
 })
