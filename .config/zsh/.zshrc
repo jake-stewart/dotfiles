@@ -64,6 +64,9 @@ yarn() {
 # js-beautify
 alias js-beautify='js-beautify -b end-expand'
 
+# massren
+alias massren="massren -d ''"
+
 # java
 # JAVA_VMS="$HOME/Library/Java/JavaVirtualMachines"
 # export JAVA_HOME="$JAVA_VMS/openjdk-17.0.2/Contents/Home/"
