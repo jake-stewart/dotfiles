@@ -23,6 +23,7 @@ local function lambdaSnippet(output) snippet("<c-l>", output) end
 local function classSnippet(output) snippet("<c-k>", output) end
 local function structSnippet(output) snippet("<c-h>", output) end
 local function tryCatchSnippet(output) snippet("<c-t>", output) end
+local function enumSnippet(output) snippet("<C-n>", output) end
 
 snippet("<c-p>", "()<left>")
 
@@ -198,4 +199,43 @@ autocmd("FileType", {
         lambdaSnippet("function()<CR>end<esc>O")
         tryCatchSnippet("pcall(function()<CR>end)<esc>O")
     end,
+})
+
+augroup("RustSnippets", { clear = true })
+autocmd("FileType", {
+	pattern = "rust",
+	group = "RustSnippets",
+	callback = function()
+		printLineSnippet('println!("");<esc>hhhi')
+		debugSnippet("dbg!(&);<esc>hi")
+		whileLoopSnippet("while  {<CR>}<esc>k$hhi")
+		forLoopSnippet("for  in  {<CR>}<esc>k$hhhi")
+		ifStatementSnippet("if  {<CR>}<esc>k$hhi")
+		elseIfStatementSnippet("else if  {<CR>}<esc>k$hhi")
+		elseStatementSnippet("else {<CR>}<esc>O")
+		switchSnippet("match  {<CR>}<esc>k$hhi")
+		enumSnippet("enum  {<CR>}<esc>k$hi")
+		structSnippet("struct  {<CR>}<esc>k$hi")
+		functionSnippet("fn () {<CR>}<esc>k$F(i")
+	end,
+})
+
+augroup("GoSnippets", { clear = true })
+autocmd("FileType", {
+	pattern = "go",
+	group = "GoSnippets",
+	callback = function()
+		printLineSnippet('fmt.Println("")<esc>hhhi')
+		debugSnippet("fmt.Println();<esc>hi")
+		whileLoopSnippet("for  {<CR>}<esc>k$hhi")
+		forLoopSnippet("for i := 0; i < ; i++ {<CR>}<esc>k$hhi")
+		ifStatementSnippet("if  {<CR>}<esc>k$hhi")
+		elseIfStatementSnippet("else if  {<CR>}<esc>k$hhi")
+		elseStatementSnippet("else {<CR>}<esc>O")
+		switchSnippet("switch  {<CR>}<esc>k$hhi")
+		caseSnippet("case :<CR>fallthrough<esc>k$bbi")
+		defaultCaseSnippet("default:<CR><esc>O")
+		functionSnippet("func () {<CR>}<esc>k$F(i")
+		structSnippet("type  struct {<CR>}<esc>k$hi")
+	end,
 })
