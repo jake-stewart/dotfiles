@@ -1,8 +1,3 @@
-vim.diagnostic.config({
-	-- if line has say both a .HINT and .WARNING, the "worst" will be shown (as a sign on the left)
-	severity_sort = true,
-})
-
 local function getPopups()
 	return vim.fn.filter(vim.api.nvim_tabpage_list_wins(0),
 		function(_, e) return vim.api.nvim_win_get_config(e).zindex end)
