@@ -1,3 +1,37 @@
+local function getPopups()
+    return vim.fn.filter(vim.api.nvim_tabpage_list_wins(0),
+        function(_, e) return vim.api.nvim_win_get_config(e).zindex end)
+end
+
+local function popupOpen()
+    return #getPopups() > 0
+end
+
+local function jumpToDiagnostic(direction)
+    local floatOpts = {
+        format = function(diagnostic)
+            return vim.split(diagnostic.message, "\n")[1]
+        end,
+        -- source = true,
+        prefix = "",
+        suffix = "",
+        focusable = false,
+        header = ""
+    }
+    local action = direction == 1 and "goto_next" or "goto_prev"
+    if popupOpen() then
+        vim.diagnostic[action]({ float = floatOpts })
+    else
+        vim.diagnostic[action]({
+            float = floatOpts,
+            cursor_position = {
+                vim.fn.line("."),
+                direction == 1 and 0 or 9999
+            }
+        })
+    end
+end
+
 return {
     'neovim/nvim-lspconfig',
     dependencies = { 'hrsh7th/nvim-cmp' },
@@ -35,10 +69,12 @@ return {
             vim.keymap.set('n', '<leader>r', vim.lsp.buf.rename, bufopts)
             vim.keymap.set('n', '<c-r>', vim.cmd.LspRestart, bufopts)
             vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, bufopts)
-            vim.keymap.set('n', '<up>', function()
-                vim.diagnostic.open_float(nil, { focusable = false })
+            vim.keymap.set('n', '<up>', function() jumpToDiagnostic(-1) end, bufopts)
+            vim.keymap.set('n', '<down>', function() jumpToDiagnostic(1) end, bufopts)
+            vim.keymap.set('n', 'g<up>', function()
+                vim.diagnostic.open_float({focusable = false})
             end, bufopts)
-
+            -- vim.diagnostic.open_float(nil, { focusable = false })
             if opts.commentstring then
                 vim.cmd.setlocal("commentstring=" .. opts.commentstring)
             end

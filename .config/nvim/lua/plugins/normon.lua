@@ -16,10 +16,12 @@ return {
         normon("<leader>N", "cgN")
         normon("<leader>q", "q")
         normon("<leader>Q", "q", {backward = true})
-        normon("*", "n", {clearSearch = true})
-        normon("#", "n", {backward = true, clearSearch = true})
-
+        normon("*", "n")
+        normon("#", "n", {backward = true})
         normon("<leader>dgn", "dgn")
         normon("<leader>dgN", "dgN")
+
+        vim.keymap.set("v", "g*", "*")
+        vim.keymap.set("v", "g#", "#")
     end
 }

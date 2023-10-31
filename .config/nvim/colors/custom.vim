@@ -55,8 +55,11 @@ call HL("FoldColumn",               "NONE",   "NONE",   "NONE")
 call HL("VertSplit",                s:grey_2, "NONE",   "NONE")
 call HL("LineNr",                   s:grey_2, "NONE",   "NONE")
 call HL("CursorLineNr",             "NONE",   s:grey_0, "NONE")
+call HL("CursorLineSign",           "NONE",   s:grey_0, "NONE")
+call HL("CursorLineFold",           "NONE",   s:grey_0, "NONE")
 call HL("Folded",                   s:grey_5, "NONE",   "NONE")
 call HL("IncSearch",                s:yellow, s:grey_1, "NONE")
+call HL("CurSearch",                s:yellow, s:grey_1, "NONE")
 call HL("Search",                   "NONE",   s:grey_1, "NONE")
 call HL("ModeMsg",                  "NONE",   "NONE",   "NONE")
 call HL("NonText",                  s:grey_2, "NONE",   "NONE")
@@ -151,14 +154,26 @@ call HL("@tag",              s:red,     "NONE", "NONE")
 call HL("@tag.delimiter",    s:grey_6,  "NONE", "NONE")
 call HL("@tag.attribute",    s:yellow,  "NONE", "NONE")
 
-call HL("DiagnosticError",          s:red,    "NONE",   "NONE")
+call HL("DiagnosticErrorLine",      s:red,    s:grey_0, "NONE")
+call HL("DiagnosticWarnLine",       s:orange, s:grey_0, "NONE")
+call HL("DiagnosticHintLine",       s:grey_5, s:grey_0, "NONE")
+call HL("DiagnosticInfoLine",       s:grey_5, s:grey_0, "NONE")
+
+call HL("DiagnosticSignError",      s:red,    "NONE",   "NONE")
+call HL("DiagnosticSignWarn",       s:orange, "NONE",   "NONE")
+call HL("DiagnosticSignHint",       s:grey_5, "NONE",   "NONE")
+call HL("DiagnosticSignInfo",       s:grey_5, "NONE",   "NONE")
+
+call HL("DiagnosticError",          "NONE",    "NONE",   "NONE")
+call HL("DiagnosticWarn",           s:orange, "NONE",   "NONE")
 call HL("DiagnosticHint",           s:grey_5, "NONE",   "NONE")
 call HL("DiagnosticInfo",           s:grey_5, "NONE",   "NONE")
-call HL("DiagnosticWarn",           s:orange, "NONE",   "NONE")
-call HL("DiagnosticUnderlineError", s:red,    "NONE",   "underline")
-call HL("DiagnosticUnderlineHint",  s:grey_5, "NONE",   "underline")
-call HL("DiagnosticUnderlineInfo",  s:grey_5, "NONE",   "underline")
-call HL("DiagnosticUnderlineWarn",  s:orange, "NONE",   "underline")
+call HL("DiagnosticUnnecessary",    s:grey_5, "NONE",   "NONE")
+call HL("DiagnosticUnderlineError", s:red,    "NONE",   "NONE")
+call HL("DiagnosticUnderlineHint",  s:grey_5, "NONE",   "NONE")
+call HL("DiagnosticUnderlineInfo",  s:grey_5, "NONE",   "NONE")
+call HL("DiagnosticUnderlineWarn",  s:orange, "NONE",   "NONE")
+
 call HL("Border",                   s:grey_3, "NONE",   "NONE")
 " call HL("NormalFloat",              "NONE",   "NONE",   "NONE")
 
@@ -228,6 +243,24 @@ if !exists("cul_au_loaded")
     au ModeChanged *:[vV\x16]* call RemoveCursorlineInVisual()
     au WinEnter,WinLeave *     call RemoveCursorlineInVisual()
 endif
+
+
+sign define DiagnosticSignError text=>>
+            \ texthl=DiagnosticSignError
+            \ culhl=DiagnosticErrorLine
+sign define DiagnosticSignWarn text=W
+            \ texthl=DiagnosticSignWarn
+            \ culhl=DiagnosticWarnLine
+sign define DiagnosticSignInfo text=I
+            \ texthl=DiagnosticSignInfo
+            \ culhl=DiagnosticInfoLine
+sign define DiagnosticSignHint text=H
+            \ texthl=DiagnosticSignHint
+            \ culhl=DiagnosticHintLine
+sign define DiagnosticSignUnnecessary text=U
+            \ texthl=DiagnosticSignHint
+            \ culhl=DiagnosticHintLine
+
 
 " }}}
 

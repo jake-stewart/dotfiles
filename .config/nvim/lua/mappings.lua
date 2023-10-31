@@ -82,16 +82,6 @@ keymap.set("n", "U", "<c-r>");
 
 keymap.set("i", "<up>", "<c-k>");
 
-local function scroll(direction)
-    local scrolloff = o.scrolloff
-    -- o.scrolloff = 999
-    cmd.norm("10" .. direction)
-    o.scrolloff = scrolloff
-end
-
--- keymap.set("n", "<c-u>", function() scroll("k") end);
--- keymap.set("n", "<c-d>", function() scroll("j") end);
-
 keymap.set("n", "<c-u>", "10k");
 keymap.set("n", "<c-d>", "10j");
 
@@ -108,9 +98,21 @@ keymap.set("n", "gp", function()
     return "`[" .. fn.strpart(fn.getregtype(), 0, 1) .. "`]"
 end, {expr=true})
 
--- clear search highlight
+local function getPopups()
+    return vim.fn.filter(vim.api.nvim_tabpage_list_wins(0),
+        function(_, e) return vim.api.nvim_win_get_config(e).zindex end)
+end
+
+local function killPopups()
+   vim.fn.map(getPopups(), function(_, e)
+        vim.api.nvim_win_close(e, false)
+    end)
+end
+
+-- clear search highlight & kill popups
 keymap.set("n", "<esc>", function()
     vim.cmd.noh()
+    killPopups()
 end)
 
 -- ^, $, and %, <c-^> are motions I use all the time
