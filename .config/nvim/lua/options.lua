@@ -33,6 +33,8 @@ vim.o.belloff = "all"
 vim.g.netrw_banner = 0
 vim.diagnostic.config({
   virtual_text = false,
+  -- if line has say both a .HINT and .WARNING, the "worst" will be shown (as a sign on the left)
+	severity_sort = true,
 })
 
 -- LONG LINES
