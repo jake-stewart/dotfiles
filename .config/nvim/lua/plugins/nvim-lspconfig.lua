@@ -1,36 +1,59 @@
 local function getPopups()
-    return vim.fn.filter(vim.api.nvim_tabpage_list_wins(0),
-        function(_, e) return vim.api.nvim_win_get_config(e).zindex end)
+	return vim.fn.filter(vim.api.nvim_tabpage_list_wins(0),
+		function(_, e) return vim.api.nvim_win_get_config(e).zindex end)
 end
-
 local function popupOpen()
-    return #getPopups() > 0
+	return #getPopups() > 0
+end
+local function jumpToDiagnostic(direction, requestSeverity)
+	local bufnr = vim.api.nvim_get_current_buf()
+	local diagnostics = vim.diagnostic.get(bufnr)
+	local line = vim.fn.line(".") - 1
+	-- severity is [1:4], the lower the "worse"
+	local targetSeverity = { 1, 2, 3, 4 }
+	local diagnosticOnCurrentLine = false
+	if requestSeverity ~= 'all' then -- '~=' is '!=' in this crazy language.
+		for _, d in pairs(diagnostics) do
+			if d.lnum == line then
+				diagnosticOnCurrentLine = true
+			end
+
+			-- only navigate between errors, if there are any
+			if d.severity == 1 then
+				targetSeverity = { 1 }
+			end
+		end
+	end
+
+	local floatOpts = {
+		format = function(diagnostic)
+			return vim.split(diagnostic.message, "\n")[1]
+		end,
+		-- source = true,
+		prefix = "",
+		suffix = "",
+		focusable = false,
+		header = ""
+	}
+	local action = direction == 1 and "goto_next" or "goto_prev"
+	if popupOpen() then
+		vim.diagnostic[action]({ float = floatOpts, severity = targetSeverity })
+	elseif diagnosticOnCurrentLine then
+		-- because there is no "goto_current"
+		vim.diagnostic["goto_next"]()
+		vim.diagnostic["goto_prev"]({ float = floatOpts, severity = { 1, 2, 3, 4 } })
+	else
+		vim.diagnostic[action]({
+			cursor_position = {
+				vim.fn.line("."),
+				direction == 1 and 0 or 9999
+			},
+			float = floatOpts,
+			severity = targetSeverity
+		})
+	end
 end
 
-local function jumpToDiagnostic(direction)
-    local floatOpts = {
-        format = function(diagnostic)
-            return vim.split(diagnostic.message, "\n")[1]
-        end,
-        -- source = true,
-        prefix = "",
-        suffix = "",
-        focusable = false,
-        header = ""
-    }
-    local action = direction == 1 and "goto_next" or "goto_prev"
-    if popupOpen() then
-        vim.diagnostic[action]({ float = floatOpts })
-    else
-        vim.diagnostic[action]({
-            float = floatOpts,
-            cursor_position = {
-                vim.fn.line("."),
-                direction == 1 and 0 or 9999
-            }
-        })
-    end
-end
 
 return {
     'neovim/nvim-lspconfig',
@@ -69,8 +92,10 @@ return {
             vim.keymap.set('n', '<leader>r', vim.lsp.buf.rename, bufopts)
             vim.keymap.set('n', '<c-r>', vim.cmd.LspRestart, bufopts)
             vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, bufopts)
-            vim.keymap.set('n', '<up>', function() jumpToDiagnostic(-1) end, bufopts)
-            vim.keymap.set('n', '<down>', function() jumpToDiagnostic(1) end, bufopts)
+            vim.keymap.set('n', '<up>', function() jumpToDiagnostic(-1, 'max') end, bufopts)
+            vim.keymap.set('n', '<down>', function() jumpToDiagnostic(1, 'max') end, bufopts)
+            vim.keymap.set('n', '<a-up>', function() jumpToDiagnostic(-1, 'all') end, bufopts)
+            vim.keymap.set('n', '<a-down>', function() jumpToDiagnostic(1, 'all') end, bufopts)
             vim.keymap.set('n', 'g<up>', function()
                 vim.diagnostic.open_float({focusable = false})
             end, bufopts)
