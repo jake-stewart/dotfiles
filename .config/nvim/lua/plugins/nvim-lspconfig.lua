@@ -34,7 +34,12 @@ local function jumpToDiagnostic(direction, initialOpts, subsequentOpts)
     initialOpts = initialOpts or {}
     subsequentOpts = subsequentOpts or initialOpts
 
-    if not popupOpen() then
+    if popupOpen() then
+        local opts = {}
+        for k, v in pairs(defaultJumpDiagnosticOpts) do opts[k] = v end
+        for k, v in pairs(subsequentOpts) do opts[k] = v end
+        vim.diagnostic[direction == 1 and "goto_next" or "goto_prev"](opts)
+    else
         local cursor_position = nil
         local line = vim.fn.line(".")
         local lineDiagnostics = vim.diagnostic.get(0, {
@@ -59,11 +64,6 @@ local function jumpToDiagnostic(direction, initialOpts, subsequentOpts)
         local opts = { cursor_position = cursor_position }
         for k, v in pairs(defaultJumpDiagnosticOpts) do opts[k] = v end
         for k, v in pairs(initialOpts) do opts[k] = v end
-        vim.diagnostic[direction == 1 and "goto_next" or "goto_prev"](opts)
-    else
-        local opts = {}
-        for k, v in pairs(defaultJumpDiagnosticOpts) do opts[k] = v end
-        for k, v in pairs(subsequentOpts) do opts[k] = v end
         vim.diagnostic[direction == 1 and "goto_next" or "goto_prev"](opts)
     end
 end
