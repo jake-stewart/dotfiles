@@ -18,11 +18,8 @@ local function popupOpen()
     return #getPopups() > 0
 end
 
-local function jumpToDiagnostic(direction, initialOpts, subsequentOpts)
-    initialOpts = initialOpts or {}
-    subsequentOpts = subsequentOpts or initialOpts
-
-    local floatOpts = {
+local defaultJumpDiagnosticOpts = {
+    float = {
         format = function(diagnostic)
             return vim.split(diagnostic.message, "\n")[1]
         end,
@@ -31,6 +28,11 @@ local function jumpToDiagnostic(direction, initialOpts, subsequentOpts)
         focusable = false,
         header = ""
     }
+}
+
+local function jumpToDiagnostic(direction, initialOpts, subsequentOpts)
+    initialOpts = initialOpts or {}
+    subsequentOpts = subsequentOpts or initialOpts
 
     if not popupOpen() then
         local cursor_position = nil
@@ -54,18 +56,15 @@ local function jumpToDiagnostic(direction, initialOpts, subsequentOpts)
             end
             cursor_position = { line, col - direction - 1 }
         end
-        local gotoOpts = {
-            cursor_position = cursor_position,
-            float = floatOpts,
-        }
-        for k, v in pairs(initialOpts) do gotoOpts[k] = v end
-        vim.diagnostic[direction == 1 and "goto_next" or "goto_prev"](gotoOpts)
+        local opts = { cursor_position = cursor_position }
+        for k, v in pairs(defaultJumpDiagnosticOpts) do opts[k] = v end
+        for k, v in pairs(initialOpts) do opts[k] = v end
+        vim.diagnostic[direction == 1 and "goto_next" or "goto_prev"](opts)
     else
-        local gotoOpts = {
-            float = floatOpts
-        }
-        for k, v in pairs(subsequentOpts) do gotoOpts[k] = v end
-        vim.diagnostic[direction == 1 and "goto_next" or "goto_prev"](gotoOpts)
+        local opts = {}
+        for k, v in pairs(defaultJumpDiagnosticOpts) do opts[k] = v end
+        for k, v in pairs(subsequentOpts) do opts[k] = v end
+        vim.diagnostic[direction == 1 and "goto_next" or "goto_prev"](opts)
     end
 end
 
@@ -110,10 +109,6 @@ return {
 
             vim.keymap.set('n', '<up>', function() jumpToDiagnostic(-1) end, bufopts)
             vim.keymap.set('n', '<down>', function() jumpToDiagnostic(1) end, bufopts)
-
-            local jumpOpts = { severity = { min = vim.diagnostic.severity.ERROR }}
-            vim.keymap.set('n', '<leader><up>', function() jumpToDiagnostic(-1, {}, jumpOpts) end, bufopts)
-            vim.keymap.set('n', '<leader><down>', function() jumpToDiagnostic(1, {}, jumpOpts) end, bufopts)
 
             vim.keymap.set('n', 'g<up>', function()
                 vim.diagnostic.open_float({ focusable = false })
