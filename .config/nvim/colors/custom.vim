@@ -156,18 +156,18 @@ call HL("@tag.attribute",    s:yellow,  "NONE", "NONE")
 
 call HL("DiagnosticErrorLine",      s:red,    s:grey_0, "NONE")
 call HL("DiagnosticWarnLine",       s:orange, s:grey_0, "NONE")
-call HL("DiagnosticHintLine",       s:grey_5, s:grey_0, "NONE")
-call HL("DiagnosticInfoLine",       s:grey_5, s:grey_0, "NONE")
+call HL("DiagnosticHintLine",       s:orange, s:grey_0, "NONE")
+call HL("DiagnosticInfoLine",       s:orange, s:grey_0, "NONE")
 
 call HL("DiagnosticSignError",      s:red,    "NONE",   "NONE")
 call HL("DiagnosticSignWarn",       s:orange, "NONE",   "NONE")
-call HL("DiagnosticSignHint",       s:grey_5, "NONE",   "NONE")
-call HL("DiagnosticSignInfo",       s:grey_5, "NONE",   "NONE")
+call HL("DiagnosticSignHint",       s:orange, "NONE",   "NONE")
+call HL("DiagnosticSignInfo",       s:orange, "NONE",   "NONE")
 
 call HL("DiagnosticError",          "NONE",    "NONE",   "NONE")
-call HL("DiagnosticWarn",           s:orange, "NONE",   "NONE")
-call HL("DiagnosticHint",           s:grey_5, "NONE",   "NONE")
-call HL("DiagnosticInfo",           s:grey_5, "NONE",   "NONE")
+call HL("DiagnosticWarn",           "NONE",    "NONE",   "NONE")
+call HL("DiagnosticHint",           "NONE",    "NONE",   "NONE")
+call HL("DiagnosticInfo",           "NONE",    "NONE",   "NONE")
 call HL("DiagnosticUnnecessary",    s:grey_5, "NONE",   "NONE")
 call HL("DiagnosticUnderlineError", s:red,    "NONE",   "NONE")
 call HL("DiagnosticUnderlineHint",  s:grey_5, "NONE",   "NONE")
@@ -248,16 +248,13 @@ endif
 sign define DiagnosticSignError text=>>
             \ texthl=DiagnosticSignError
             \ culhl=DiagnosticErrorLine
-sign define DiagnosticSignWarn text=W
+sign define DiagnosticSignWarn text=>>
             \ texthl=DiagnosticSignWarn
             \ culhl=DiagnosticWarnLine
-sign define DiagnosticSignInfo text=I
+sign define DiagnosticSignInfo text=>>
             \ texthl=DiagnosticSignInfo
             \ culhl=DiagnosticInfoLine
-sign define DiagnosticSignHint text=H
-            \ texthl=DiagnosticSignHint
-            \ culhl=DiagnosticHintLine
-sign define DiagnosticSignUnnecessary text=U
+sign define DiagnosticSignHint text=>>
             \ texthl=DiagnosticSignHint
             \ culhl=DiagnosticHintLine
 
