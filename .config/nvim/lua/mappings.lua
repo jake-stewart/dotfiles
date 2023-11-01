@@ -69,7 +69,7 @@ vim.keymap.set("n", "<c-i>", "<c-i>zz")
 -- fix spelling for cursor word
 local function fixSpelling()
     local cword = vim.fn.expand("<cword>")
-    local spelling = vim.fn.spellsuggest(cword)[1] or ""
+    local spelling = vim.fn.spellsuggest("_" .. cword)[1] or ""
     spelling = (cword:lower() == cword) and spelling:lower() or spelling
     local output = '"_yiw'
     if spelling:match("^[a-zA-Z -]+$") and cword ~= spelling then
