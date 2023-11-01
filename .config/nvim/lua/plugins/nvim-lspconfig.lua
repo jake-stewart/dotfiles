@@ -110,6 +110,10 @@ return {
             vim.keymap.set('n', '<up>', function() jumpToDiagnostic(-1) end, bufopts)
             vim.keymap.set('n', '<down>', function() jumpToDiagnostic(1) end, bufopts)
 
+            local jumpOpts = { severity = { min = vim.diagnostic.severity.ERROR } }
+            vim.keymap.set('n', '<leader><up>', function() jumpToDiagnostic(-1, {}, jumpOpts) end, bufopts)
+            vim.keymap.set('n', '<leader><down>', function() jumpToDiagnostic(1, {}, jumpOpts) end, bufopts)
+
             vim.keymap.set('n', 'g<up>', function()
                 vim.diagnostic.open_float({ focusable = false })
             end, bufopts)
