@@ -1,4 +1,4 @@
 #!/bin/bash
 set -e
 
-"$HOME/.config/tmux/popup.sh" py
+"$HOME/.config/tmux/popup.sh" python3

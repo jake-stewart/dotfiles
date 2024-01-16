@@ -16,6 +16,8 @@ set hidden
 set previewer ~/.config/lf/preview.sh
 set cleaner ~/.config/lf/clean.sh
 
+map <c-g> push :glob-select<space>
+
 set mouse
 cmd open  # disable 'l' to 'open' files
 
@@ -31,6 +33,8 @@ map c push :rename<enter><c-u>
 map i push :rename<enter>
 map I push :rename<enter><c-a>
 map A push :rename<enter><c-e>
+
+map t copy
 
 map g top
 map D delete
@@ -51,7 +55,7 @@ cmd edit ${{
 }}
 
 map e edit
-map o ${{nvim "$f"}}
+map o ${{open "$f"}}
 
 # }}}
 

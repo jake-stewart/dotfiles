@@ -75,6 +75,7 @@ alias massren="massren -d ''"
 # fnm
 command-exists "fnm" && eval "$(fnm env --use-on-cd)"
 
+# npx
 alias npx="EDITOR='$HOME/.config/tmux/popup-nvim.sh' npx"
 
 # time
@@ -120,6 +121,7 @@ bindkey "^?" backward-delete-char
 # move cursor to start/end of line with gh/gl
 bindkey -M vicmd gh beginning-of-line
 bindkey -M vicmd gl end-of-line
+bindkey -M vicmd ga vi-add-eol
 bindkey -M vicmd gm vi-match-bracket
 bindkey -M vicmd t vi-yank
 
@@ -245,7 +247,7 @@ setopt PROMPT_SUBST
 
 branch_name() {
     branch=$(git symbolic-ref HEAD 2> /dev/null | sed 's:^refs/heads/::')
-    [[ $branch != "" ]] && printf "%s" "[$branch] "
+    [[ "$branch" != "" ]] && printf "%s" "[$branch] "
 }
 
 PROMPT='$(branch_name)$(basename "$(pwd)") $ '
@@ -387,7 +389,6 @@ cdls() {
     fi
     [ -n "$TMUX" ] && tmux refresh-client -S
 }
-alias cd=cdls
 
 # }}}
 # CATLS {{{
@@ -464,6 +465,34 @@ zle -N jfind_history
 bindkey -M vicmd '' jfind_history
 bindkey '' jfind_history
 
+jfind_complete() {
+    last_char="${BUFFER: -1}"
+    if [ "$last_char" = " " ]; then
+        word=""
+    else
+        word=$(echo "$BUFFER" | awk '{print $NF}')
+    fi
+    if [ -n "$TMUX" ]; then
+        ~/.config/tmux/popup-jfind-zsh-complete.sh "$word"
+    else
+        ~/.config/jfind/jfind-zsh-complete.sh "$word"
+    fi
+    output=$(cat ~/.cache/jfind_out)
+    if [ -n "$output" ]; then
+        if [ "$word" = "" ]; then
+            BUFFER="$BUFFER$output"
+        else
+            BUFFER=$(echo "$BUFFER" | sed "s/$word$/$output/")
+        fi
+        zle .end-of-line
+        set-keymap vicmd
+    fi
+}
+
+zle -N jfind_complete
+bindkey -M vicmd '' jfind_complete
+bindkey '' jfind_complete
+
 # }}}
 # WHATIS {{{
 
@@ -494,7 +523,6 @@ tmux_wrapper() {
         fi
     fi
 }
-alias tmux=tmux_wrapper
 
 # }}}
 # CLEAR {{{
@@ -517,13 +545,41 @@ mvcd() {
     mv $@ && cd "$@[-1]"
 }
 
+dl() {
+    (cd ~/Downloads && realpath "$(ls -t ~/Downloads | head -1)")
+}
+dl='"$(\cd ~/Downloads && realpath "$(ls -t ~/Downloads | head -1)")"'
+
+argc() {
+    echo "$#"
+}
 
 # }}}
 # ALIASES {{{
 
 alias vi=nvi
 alias vim=nvim
+alias mv="mv -i"
+alias cd=cdls
+alias tmux=tmux_wrapper
+alias rg="rg --smart-case"
 
 # }}}
+
+git="$(which git)"
+
+repo() {
+    "$git" config --get remote.origin.url
+}
+
+git() {
+    if [ "$1" = "commit" ] && [ "$#" = 1 ] \
+        && ! grep -Fx "$(repo)" ~/.config/zsh/repos >/dev/null
+    then
+        "$git" commit -m "did shit"
+    else
+        "$git" "$@"
+    fi
+}
 
 # vim: foldmethod=marker

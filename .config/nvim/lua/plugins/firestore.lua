@@ -1,3 +1,0 @@
-return {
-    "delphinus/vim-firestore"
-}

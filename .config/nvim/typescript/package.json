@@ -1,0 +1,21 @@
+{
+    "name": "nvim_config",
+    "version": "1.0.0",
+    "dependencies": {
+        "@typescript-to-lua/language-extensions": "^1.19.0",
+        "npm-watch": "^0.11.0",
+        "tsnvim": "file:/Users/jakey/.local/share/nvim/ts.nvim/package",
+        "typescript-to-lua": "^1.23.0"
+    },
+    "watch": {
+        "foo": {
+            "patterns": [ "src" ],
+            "extensions": "ts,js",
+            "quiet": false
+        }
+    },
+    "scripts": {
+        "watch": "npm-watch foo",
+        "foo": "echo lmao"
+    }
+}
