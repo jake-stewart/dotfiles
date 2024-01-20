@@ -250,7 +250,12 @@ branch_name() {
     [[ "$branch" != "" ]] && printf "%s" "[$branch] "
 }
 
-PROMPT='$(branch_name)$(basename "$(pwd)") $ '
+PROMPT='$(date +%H:%M) $(branch_name)$(basename "$(pwd)") $ '
+
+TMOUT=30
+TRAPALRM() {
+    zle reset-prompt
+}
 
 display-prompt() {
     eval "printf \"$1$PROMPT$2\""

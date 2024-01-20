@@ -1,3 +1,25 @@
+
+
+
+
+
+
+
+
+
+" go away
+" this isn't finished
+
+
+
+
+
+
+
+
+
+
+
 let b:editObject = v:null
 
 setlocal nonumber

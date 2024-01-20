@@ -1,8 +1,3 @@
-export const sane = {
-    1: "jake-stewart/sane.lua",
-    dir: "~/clones/sane.lua"
-};
-
 export { regexVars } from "./regex-vars"
 export { diagnosticJump } from "./diagnostic-jump"
 export { nvimTreesitter } from "./nvim-treesitter"

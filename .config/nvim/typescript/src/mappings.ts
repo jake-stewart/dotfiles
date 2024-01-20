@@ -222,16 +222,3 @@ vim.keymap.set(["n", "v"], "gK", "ga");
 vim.keymap.set(["n", "v"], "-c", '"_c');
 vim.keymap.set(["n", "v"], "-d", '"_d');
 vim.keymap.set(["n", "v"], "-x", '"_x');
-
-// function dotJumper(key: string) {
-//     const lower = key.toLowerCase();
-//     vim.keymap.set(["n", "v"], key, () => {
-//         vim.opt.iskeyword.append(".");
-//         vim.cmd.norm(lower);
-//         vim.opt.iskeyword.remove(".");
-//     });
-// }
-// dotJumper("W");
-// dotJumper("B");
-// dotJumper("E");
-// dotJumper("gE");
