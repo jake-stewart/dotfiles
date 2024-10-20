@@ -47,21 +47,6 @@ clone_cmake() {
     installed "$2"
 }
 
-clone_vim_plug() {
-    path="$HOME/.local/share/nvim/site/autoload/plug.vim"
-    url="https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
-    [[ -e "$path" ]] && skipped "vim-plug" && return
-    installing "vim-plug"
-    curl -fLo "$path" --create-dirs "$url"
-    installed "vim-plug"
-}
-
-install_vim_plugs() {
-    installing "vim plugins"
-    nvim +PlugInstall +qall
-    installed "vim plugins"
-}
-
 command_exists() {
     command -v "$1" &>/dev/null
 }
@@ -115,9 +100,6 @@ ensure_installed git
 ensure_installed curl
 ensure_installed cmake
 ensure_installed nvim
-
-clone_vim_plug
-install_vim_plugs
 
 install_htop_vim
 install_nvimpager
