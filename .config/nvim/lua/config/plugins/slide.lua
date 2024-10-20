@@ -1,0 +1,12 @@
+local plugin = require("config.util.plugin")
+
+return plugin("jake-stewart/slide.nvim")
+    :module("slide")
+    :dir("~/clones/slide.nvim")
+    :map({"n", "v", "o"}, "<leader>j", function(slide)
+        slide.down()
+    end)
+    :map({"n", "v", "o"}, "<leader>k", function(slide)
+        slide.up()
+    end)
+    :setup()
