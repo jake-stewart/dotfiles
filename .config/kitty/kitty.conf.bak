@@ -24,13 +24,11 @@ italic_font      Custom Sans Italic
 bold_font        Custom Sans Bold
 bold_italic_font Custom Sans Bold Italic
 
-
-# symbol_map U+00A9,U+00AE,U+203C,U+2049,U+20E3,U+2122,U+2139,U+2194-U+2199,U+21A9-U+21AA,U+231A,U+231B,U+2328,U+23CF,U+23E9-U+23F3,U+23F8-U+23FA,U+24C2,U+25AA,U+25AB,U+25B6,U+25C0,U+25FB-U+25FE,U+2600-U+27EF,U+2934,U+2935,U+2B00-U+2BFF,U+3030,U+303D,U+3297,U+3299,U+1F000-U+1F02F,U+1F0A0-U+1F0FF,U+1F100-U+1F64F,U+1F680-U+1F6FF,U+1F910-U+1F96B,U+1F980-U+1F9E0 Noto Emoji
+# shell cat
 
 # }}}
 # SETTINGS {{{
 
-cursor_text_color background
 shell_integration disabled
 strip_trailing_spaces smart
 enable_audio_bell no
@@ -39,8 +37,6 @@ clear_all_shortcuts yes
 confirm_os_window_close 0
 detect_urls no
 window_padding_width 9
-# window_padding_width 0
-# hide_window_decorations yes
 placement_strategy center
 default_pointer_shape arrow
 cursor_blink_interval 0.5
@@ -57,9 +53,6 @@ listen_on unix:/tmp/kitty-sock
 # include ~/.config/kitty/colors/light.conf
 include ~/.config/kitty/colors/dark.conf
 # include ~/.config/kitty/colors/onedark.conf
-# include ~/.config/kitty/colors/hacker.conf
-# include ~/.config/kitty/colors/tomorrow_night.conf
-# include ~/.config/kitty/colors/chadtain.conf
 
 # }}}
 # META KEYS {{{
@@ -175,27 +168,10 @@ map option+h send_text all \x1bh
 map ctrl+tab send_text all \x1b[1;5I
 map ctrl+shift+tab send_text all \x1b[1;6I
 
-map ctrl+1 combine
-    \ : launch --type background ~/.config/kitty/theme light
-    \ : set_colors ~/.config/kitty/colors/light.conf
-    \ : launch --type background tmux refresh-client
-
-map ctrl+2 combine
-    \ : launch --type background ~/.config/kitty/theme light
-    \ : set_colors ~/.config/kitty/colors/medium.conf
-    \ : launch --type background tmux refresh-client
-
-map ctrl+3 combine
-    \ : launch --type background ~/.config/kitty/theme dark
-    \ : set_colors ~/.config/kitty/colors/dark.conf
-    \ : launch --type background tmux refresh-client
-
-map ctrl+4 combine
-    \ : launch --type background ~/.config/kitty/theme darkest
-    \ : set_colors ~/.config/kitty/colors/darkest.conf
-    \ : launch --type background tmux refresh-client
-
-map ctrl+shift+r load_config_file
+map cmd+shift+1 set_colors ~/.config/kitty/colors/light.conf
+map cmd+shift+2 set_colors ~/.config/kitty/colors/dark.conf
+map cmd+shift+6 set_colors ~/.config/kitty/colors/onedark.conf
+map cmd+shift+7 set_colors ~/.config/kitty/colors/dark-greyscale.conf
 map cmd+shift+r load_config_file
 
 # }}}
