@@ -6,6 +6,9 @@
 #   d888'    .P o.  )88b  888   888  
 # .8888888888P  8""888P' o888o o888o 
 
+IS_NESTED_ZSH_SESSION="$IN_ZSH_SESSION"
+export IN_ZSH_SESSION=1
+
 # UTILS {{{
 
 command-exists() {
@@ -34,8 +37,8 @@ setopt INTERACTIVE_COMMENTS
 # history
 setopt HIST_IGNORE_SPACE
 HISTFILE=$ZDOTDIR/.zsh_history
-HISTSIZE=999999999
-SAVEHIST=$HISTSIZE
+HISTSIZE=1000000
+SAVEHIST=1000000
 
 # }}}
 # EXPORTS {{{
@@ -72,7 +75,7 @@ alias massren="massren -d ''"
 # export JAVA_HOME="$JAVA_VMS/openjdk-17.0.2/Contents/Home/"
 # export JDTLS_HOME="/usr/local/Cellar/jdtls/1.11.0/libexec"
 
-# fnm
+# # fnm
 command-exists "fnm" && eval "$(fnm env --use-on-cd)"
 
 # npx
@@ -124,6 +127,15 @@ bindkey -M vicmd gl end-of-line
 bindkey -M vicmd ga vi-add-eol
 bindkey -M vicmd gm vi-match-bracket
 bindkey -M vicmd t vi-yank
+
+alias python3="python3 -q"
+
+python-mode() {
+    BUFFER="python3"
+    zle .accept-line
+}
+zle -N python-mode
+bindkey '' python-mode
 
 # make : act like opening commandline mode
 commandline-mode() {
@@ -246,11 +258,15 @@ fi
 setopt PROMPT_SUBST
 
 branch_name() {
-    branch=$(git symbolic-ref HEAD 2> /dev/null | sed 's:^refs/heads/::')
+    branch=$(git rev-parse --abbrev-ref HEAD 2> /dev/null | sed 's:^refs/heads/::')
     [[ "$branch" != "" ]] && printf "%s" "[$branch] "
 }
 
-PROMPT='$(date +%H:%M) $(branch_name)$(basename "$(pwd)") $ '
+nested_check() {
+    [ "$IS_NESTED_ZSH_SESSION" -eq 1 ] && printf "[NESTED] "
+}
+
+PROMPT='$(date +%H:%M) $(nested_check)$(branch_name)$(basename "$(pwd)") \$ '
 
 TMOUT=30
 TRAPALRM() {
@@ -294,9 +310,11 @@ skipPostExec
 # ACCEPT LINE {{{
 
 accept-math-line() {
+    # expr="${BUFFER:2}"
+    expr="${BUFFER}"
     # execute the expression using python
     echo
-    python3 -c "print(${BUFFER})"
+    expr.py "$expr"
     # save history and accept an empty line make it usable
     print -s "$BUFFER"
     BUFFER=""
@@ -306,23 +324,33 @@ accept-math-line() {
 }
 
 accept-line () {
-    if [[ "$BUFFER" =~ "^[0-9].*" ]]; then
-        # if the commandline is a mathematical expression, evaluate it
-        accept-math-line
-    elif [[ "$BUFFER" = "k" ]]; then
+    if [[ "$BUFFER" = "k" ]]; then
         # i use esc-k-enter to enter normal mode, load last history, and run it
         # if i type it too fast, i type it as k-esc-enter which just runs 'k'
         # if the buffer is a single 'k', replace it with the last history item
         BUFFER="$(history | tail -n1 | sed 's/^[0-9]*[ \t]*//')"
-        zle .accept-line
+    fi
+    if [[ "$BUFFER" =~ "^\\(*[0-9]" ]]; then
+        # if the commandline is a mathematical expression, evaluate it
+        # BUFFER="c $BUFFER"
+        accept-math-line
     elif [[ "$BUFFER" = "" ]]; then
         # if it is empty, redisplay the prompt two lines down. this is much
         # faster than accepting an empty line since it avoids all the
         # processing zsh has to do after a command has executed
         display-prompt "\n\n"
     else
-        # otherwise, accept the line normally
-        zle .accept-line
+        if [[ "$BUFFER" =~ '\$DL' ]] && type fd >/dev/null; then
+            replaced=$(echo "$BUFFER" | sd '\$DL\b' '"$(last-download)"')
+            print -s "$BUFFER"
+            echo
+            BUFFER=""
+            zle .accept-line
+            skipPostExec
+            eval "$replaced"
+        else
+            zle .accept-line
+        fi
     fi
 }
 
@@ -334,6 +362,7 @@ zle -N accept-line accept-line
 # display ^C when hitting ctrl-c
 TRAPINT() { 
     if [[ $1 == 2 ]] && zle; then
+        # zle end-of-list
         zle end-of-line
         light-grey
         printf "^C"
@@ -400,7 +429,15 @@ cdls() {
 
 catls() {
     if [[ "$#" -eq "2" ]]; then
-        [[ -f "$2" ]] && cat "$2" || ls --color=auto "$2"
+        if [[ -f "$2" ]]; then
+            if [[ "$2" == *.png || "$2" == *.jpg ]]; then
+                icat "$2"
+            else
+                cat "$2"
+            fi
+        else
+            ls --color=auto "$2"
+        fi
     else
         [[ "$1" = "cat" ]] && cat "${@:2}" || ls --color=auto "${@:2}"
     fi
@@ -416,7 +453,7 @@ lfcd () {
     lf -last-dir-path="$tmp" "$@"
     if [ -f "$tmp" ]; then
         dir="$(cat "$tmp")"
-        rm -f "$tmp" >/dev/null
+        \rm -f "$tmp" >/dev/null
         [ -d "$dir" ] && [ "$dir" != "$(pwd)" ] && cd "$dir"
     fi
 }
@@ -520,10 +557,10 @@ tmux_wrapper() {
     else
         session="scratch"
         if tmux ls -F "#S" 2>/dev/null | grep "^$session$" &>/dev/null; then
-            tmux attach -t "$session"
+            IN_ZSH_SESSION=0 tmux attach -t "$session"
         else
             color=$(awk "/^$session/"'{print $2}' ~/.config/tmux/sessions)
-            tmux new -s "$session" \
+            IN_ZSH_SESSION=0 tmux new -s "$session" \
                 "tmux set-environment session_color '$color'; zsh"
         fi
     fi
@@ -567,23 +604,66 @@ alias vim=nvim
 alias mv="mv -i"
 alias cd=cdls
 alias tmux=tmux_wrapper
-alias rg="rg --smart-case"
+alias rg="rg --smart-case --max-columns=1000"
+alias rm="urm"
+alias diff="diff --color"
+
+alias "q"=exit
+alias "q!"=exit
+alias ":q"=exit
+alias ":q!"=exit
 
 # }}}
 
-git="$(which git)"
+# git="$(which git)"
+#
+# repo() {
+#     "$git" config --get remote.origin.url
+# }
+#
+# git() {
+#     if [ "$1" = "commit" ] && [ "$#" = 1 ] \
+#         && ! grep -Fx "$(repo)" ~/.config/zsh/repos >/dev/null
+#     then
+#         "$git" commit -m "did shit"
+#     else
+#         "$git" "$@"
+#     fi
+# }
 
-repo() {
-    "$git" config --get remote.origin.url
+ised() {
+    if [ "$1" = "undo" ]; then
+        find . -type f -iname "*.sed.bak" -exec \
+            bash -c 'mv {} $(basename -- {} .sed.bak)' \;
+    elif [ "$1" = "confirm" ]; then
+        find . -type f -iname "*.sed.bak" -exec rm {} \;
+    else
+        xargs -I{} sed -i ".sed.bak" -E "$1" {}
+    fi
 }
 
-git() {
-    if [ "$1" = "commit" ] && [ "$#" = 1 ] \
-        && ! grep -Fx "$(repo)" ~/.config/zsh/repos >/dev/null
-    then
-        "$git" commit -m "did shit"
-    else
-        "$git" "$@"
+last-download() {
+    echo "$HOME/Downloads/$(ls -t $HOME/Downloads | head -1)"
+}
+
+unzip="$(which unzip)"
+unzip() {
+    if [ ! -e "$1" ]; then
+        echo "not found: $1" > /dev/stderr
+        return
+    fi
+    outputDirectory="$(basename "$1" .zip)"
+    if [ -e "$outputDirectory" ]; then
+        echo "exists: $outputDirectory" > /dev/stderr
+        return
+    fi
+    "$unzip" -d "$outputDirectory" "$1"
+    if [ "$(ls "$outputDirectory" | wc -l)" -eq 1 ] && [ -d "$outputDirectory/$outputDirectory" ]; then
+        echo "flattening..."
+        tmp="$(mktemp -d)"
+        trap 'rm -rf -- "$tmp"' EXIT
+        mv "$outputDirectory/$outputDirectory/" "$tmp"
+        mv "$tmp/$outputDirectory/"* "$outputDirectory"
     fi
 }
 
