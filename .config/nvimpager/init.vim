@@ -130,7 +130,7 @@ nnoremap <silent>a :call PagerMode()<CR>
 
 noremap <silent><expr>H g:searchMode ? "H" : ":call SearchMode()<CR>H"
 noremap <silent><expr>M g:searchMode ? "M" : ":call SearchMode()<CR>M"
-noremap <silent><expr>L g:searchMode ? "M" : ":call SearchMode()<CR>L"
+noremap <silent><expr>L g:searchMode ? "L" : ":call SearchMode()<CR>L"
 
 " q and ctrl + c quits program
 nnoremap <silent>q <cmd>qa!<CR>
@@ -142,6 +142,7 @@ nnoremap <silent><expr><esc> g:searchMode ? ":call PagerMode()<CR>" : ":noh<CR>"
 
 " yank visual
 xnoremap <silent>y y:call PagerMode()<CR>
+xnoremap <silent>t y:call PagerMode()<CR>
 
 " bind u/d to ctrl+u/d
 nnoremap <silent>d <c-d>:call PagerMode()<CR>
