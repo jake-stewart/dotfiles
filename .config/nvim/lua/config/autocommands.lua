@@ -2,6 +2,7 @@ local camelSplit = require("config.util.camel-split")
 local augroup = require("config.util.augroup")
 
 local group = augroup("CustomAutocommands")
+
 group:au({
     event = "BufEnter",
     callback = function()
