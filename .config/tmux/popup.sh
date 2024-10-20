@@ -23,12 +23,15 @@ else
     fullscreen
 fi
 
+pwd="$3"
+[ "$pwd" = "" ] && pwd="$(pwd)"
+
 tmux display-popup \
     -w $width \
     -h $((height - 1)) \
     -x $(((client_width - width) / 2)) \
     -E \
-    -d "$(pwd)" \
+    -d "$pwd" \
     $2 \
     $border \
     "$1"
