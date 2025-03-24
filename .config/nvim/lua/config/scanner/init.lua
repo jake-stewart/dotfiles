@@ -46,7 +46,7 @@ function ErrorScanner:scan(level)
     end
     self._scanning = true
     local spinner = Spinner()
-    spinner:start()
+    -- spinner:start()
     scanner(level)
         :success(function(results)
             if #results == 0 then

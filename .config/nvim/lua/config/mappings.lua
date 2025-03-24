@@ -33,7 +33,7 @@ end
 local function yankPopup()
     local popups = getPopups()
     if #popups == 1 then
-        local id = popups:_get(0)
+        local id = popups[1]
         local buf = vim.api.nvim_win_get_buf(id)
         local lines = table(vim.api.nvim_buf_get_lines(buf, 0, -1, false))
         local content = lines:_join("\n")
@@ -44,17 +44,27 @@ end
 local function fixSpelling()
     local cword = vim.fn.expand("<cword>")
     local suggestions = vim.fn.spellsuggest("_" .. cword)
-    local spelling = suggestions[0] or ""
-    spelling = cword:lower() == cword
-        and spelling:lower()
+    local spelling = suggestions[1] or ""
+    spelling = cword:_lower() == cword
+        and spelling:_lower()
         or spelling
-    if string.match(spelling, "^[a-zA-Z -]+$")
-        and not cword == spelling
+    if spelling:_match("\\v^[a-zA-Z -]+$")
+        and cword ~= spelling
     then
         return "\"_ciw" .. spelling .. "\"_yiw"
     end
     return "\"_yiw"
 end
+
+map("n", "<esc>", function()
+    vim.cmd.noh()
+end)
+
+
+map("n", "t<c-g>", function()
+    -- vim.fn.setreg("+", vim.fn.getcwd())
+    vim.fn.setreg("+", vim.fn.expand("%:p"))
+end)
 
 map("n", "<space>", "<NOP>")
 map("n", ",", "<NOP>")
@@ -92,10 +102,10 @@ map("o", ".", function()
     vim.cmd.norm("`[" .. vim.fn.getregtype()[1] .. "`]")
 end)
 map("n", "tp", yankPopup)
-map("n", "<esc>", function()
-    vim.cmd.noh()
-    killPopups()
-end)
+-- map("n", "<esc>", function()
+--     vim.cmd.noh()
+--     killPopups()
+-- end)
 
 -- ^, $, and %, <c-^> are motions I use all the time
 -- however, the keys are in awful positions
@@ -114,7 +124,7 @@ map("n", "L", "L^")
 map({"n", "v"}, "gb", "zz")
 
 -- fix spelling for cursor word
-mapExpr("n", "ys", fixSpelling)
+mapExpr("n", "<leader>ys", fixSpelling)
 
 -- dd, yy, cc, etc all take too long since the same key is pressed twice
 -- use dl, yl, cl etc instead

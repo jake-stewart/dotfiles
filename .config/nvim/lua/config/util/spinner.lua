@@ -17,9 +17,9 @@ SpinnerMetatable.__index = SpinnerMetatable
 
 --- @private
 function SpinnerMetatable:_update()
-    local char = SPINNER_CHARS:_get(self._frame)
+    local char = SPINNER_CHARS:_at(self._frame)
     log.info(char .. " scanning", false)
-    self._frame = (self._frame + 1) % #SPINNER_CHARS
+    self._frame = (self._frame % #SPINNER_CHARS) + 1
 end
 
 function SpinnerMetatable:start()
@@ -40,7 +40,7 @@ end
 --- @return Spinner
 function Spinner()
     return setmetatable({
-        _frame = 0
+        _frame = 1
     }, SpinnerMetatable)
 end
 

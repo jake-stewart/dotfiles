@@ -1,9 +1,7 @@
-local plugin = require("config.util.plugin")
-
-return plugin("jake-stewart/force-cul.nvim")
-    -- :disable()
-    :dir("~/clones/force-cul.nvim")
-    :module("force-cul")
-    :event("VeryLazy")
-    :setup({})
+return require "lazier" {
+    "jake-stewart/force-cul.nvim",
+    dir = "~/clones/force-cul.nvim",
+    opts = {},
+    event = "VeryLazy",
+}
 

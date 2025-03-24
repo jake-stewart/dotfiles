@@ -1,7 +1,9 @@
-local plugin = require("config.util.plugin")
-
-return plugin("jake-stewart/jnote.nvim")
-    -- :disable()
-    :ft("markdown")
-    :dir("~/clones/jnote.nvim/dist")
-    :setup()
+return require "lazier" {
+    "jake-stewart/jnote.nvim",
+    enabled = false,
+    dir = "~/clones/jnote.nvim/dist",
+    ft = "markdown",
+    config = function()
+        require("jnote").setup()
+    end
+}

@@ -1,13 +1,10 @@
-local plugin = require("config.util.plugin")
-
-return plugin("nvim-treesitter/nvim-treesitter")
-    -- :disable()
-    :module("nvim-treesitter.configs")
-    :ft(
+return require "lazier" {
+    "nvim-treesitter/nvim-treesitter",
+    ft = {
         "c", "lua", "php", "cpp", "javascript", "typescript",
         "cs", "python", "typescriptreact", "markdown", "html"
-    )
-    :setup({
+    },
+    opts = {
         ensure_installed = {
             "c",
             "c_sharp",
@@ -31,4 +28,5 @@ return plugin("nvim-treesitter/nvim-treesitter")
             additional_vim_regex_highlighting = false,
             disable = { "vimdoc", "vim", "css" },
         }
-    })
+    }
+}

@@ -1,10 +1,6 @@
---
--- __     ___              ____      _                
--- \ \   / (_)_ __ ___    / ___|___ | | ___  _ __ ___ 
---  \ \ / /| | '_ ` _ \  | |   / _ \| |/ _ \| '__/ __|
---   \ V / | | | | | | | | |__| (_) | | (_) | |  \__ \
---    \_/  |_|_| |_| |_|  \____\___/|_|\___/|_|  |___/
---
+-- ┌─╮╭─╴╭─╮╶╮╷╶┬╴╭┬╮   ╭─╮╭─╮╷  ╭─╮┌─╮╭─╮
+-- │ │├─ │ │ ││ │ │││   │  │ ││  │ │├┬╯╰─╮
+-- ╵ ╵╰─╴╰─╯ ╰╯╶┴╴╵ ╵   ╰─╯╰─╯╰─╴╰─╯╵╰╴╰─╯
 
 local augroup = require("config.util.augroup")
 
@@ -73,12 +69,13 @@ end
 HL("Normal",                   fg,        bg,       nil)
 HL("Conceal",                  fg,        nil,      nil)
 HL("Cursor",                   nil,       nil,      REVERSE)
-HL("CursorLine",               nil,       grey1,    nil)
-HL("CursorColumn",             nil,       grey1,    nil)
 HL("SignColumn",               nil,       nil,      nil)
 HL("FoldColumn",               nil,       nil,      nil)
 HL("VertSplit",                grey3,     nil,      nil)
 HL("LineNr",                   grey3,     nil,      nil)
+-- HL("FeintLine",                nil,       grey2,    nil)
+HL("CursorColumn",             nil,       grey1,    nil)
+HL("CursorLine",               nil,       grey1,    nil)
 HL("CursorLineNr",             nil,       grey1,    nil)
 HL("CursorLineSign",           nil,       grey1,    nil)
 HL("CursorLineFold",           nil,       grey1,    nil)
@@ -110,6 +107,7 @@ HL("DiffText",                 bg,        fg,       nil)
 HL("Underlined",               nil,       nil,      UNDERLINE)
 HL("OperatorSandwichChange",   nil,       purple,   nil)
 HL("Comment",                  grey6,     nil,      ITALIC)
+HL("SpecialComment",           grey7,     nil,      nil)
 HL("Exception",                cyan,      nil,      nil)
 HL("Constant",                 cyan,      nil,      nil)
 HL("Float",                    orange,    nil,      nil)
@@ -189,14 +187,14 @@ HL("DiagnosticError",          nil,       nil,      nil)
 HL("DiagnosticWarn",           orange,    nil,      nil)
 HL("DiagnosticHint",           nil,       nil,      nil)
 HL("DiagnosticInfo",           cyan,      nil,      nil)
-HL("DiagnosticUnnecessary",    grey6,     nil,      nil)
+HL("DiagnosticUnnecessary",    grey7,     nil,      nil)
 HL("DiagnosticUnderlineError", red,       nil,      nil)
 HL("DiagnosticUnderlineHint",  grey6,     nil,      nil)
 HL("DiagnosticUnderlineInfo",  grey6,     nil,      nil)
 HL("DiagnosticUnderlineWarn",  orange,    nil,      nil)
 HL("Border",                   grey4,     nil,      nil)
 HL("NormalFloat",              nil,       grey2,    nil)
-HL("FloatBorder",              grey4,     nil,      nil)
+HL("FloatBorder",              grey4,     grey2,    nil)
 HL("WinSeparator",             grey4,     nil,      nil)
 HL("CmpItemAbbrDeprecated",    grey6,     nil,      STRIKE)
 HL("CmpItemKindText",          grey6,     nil,      nil)
@@ -211,10 +209,12 @@ HL("CmpItemMenu",              grey6,     nil,      nil)
 HL("SpellCap",                 orange,    nil,      UNDERCURL)
 HL("SpellBad",                 red,       nil,      UNDERCURL)
 
-HL("BqfPreviewFloat",          "NONE",    grey0,    nil)
-HL("QuickFixLine",             "NONE",    "NONE",   BOLD)
+HL("BqfPreviewTitle",          green,     grey3,    nil)
+HL("BqfPreviewFloat",          nil,       grey0,    nil)
+HL("QuickFixLine",             nil,       nil,      BOLD)
 LINK("BqfPreviewBorder", "Border")
 LINK("BqfPreviewRange",  "IncSearch")
+
 
 -- }}}
 -- TERMINAL HIGHLIGHTING {{{

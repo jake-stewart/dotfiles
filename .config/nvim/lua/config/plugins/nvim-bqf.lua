@@ -1,13 +1,26 @@
-local plugin = require("config.util.plugin")
+return require "lazier" {
+    "kevinhwang91/nvim-bqf",
+    ft = "qf",
+    config = function()
+        local bqf = require("bqf")
 
-return plugin("kevinhwang91/nvim-bqf")
-    -- :disable()
-    :ft("qf")
-    :module("bqf")
-    :setup(function(bqf)
+        bqf.setup({
+            preview = {
+                winblend = 0,
+                show_title = true,
+                win_height = 999,
+                border = "single",
+            },
+            func_map = {
+                open = "o",
+                openc = "<CR>",
+            }
+        })
+
         vim.api.nvim_create_augroup("BqfCustomKeybinds", {
             clear = true,
         })
+
         vim.api.nvim_create_autocmd("FileType", {
             pattern = "qf",
             group = "BqfCustomKeybinds",
@@ -18,28 +31,5 @@ return plugin("kevinhwang91/nvim-bqf")
                 })
             end
         })
-
-        bqf.setup({
-            preview = {
-                winblend = 0,
-                show_title = true,
-                win_height = 999,
-                border_chars = {
-                    "│",
-                    "│",
-                    "─",
-                    "─",
-                    "┌",
-                    "┐",
-                    "└",
-                    "┘",
-                    "█",
-                },
-            },
-            func_map = {
-                open = "o",
-                openc = "<CR>",
-            }
-        })
-    end)
-
+    end
+}

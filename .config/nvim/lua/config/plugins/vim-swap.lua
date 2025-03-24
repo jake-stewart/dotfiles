@@ -1,5 +1,6 @@
-local plugin = require("config.util.plugin")
-
-return plugin("machakann/vim-swap")
-    :map("n", "gs", "<plug>(swap-interactive)")
-    :setup()
+return require "lazier" {
+    "machakann/vim-swap",
+    config = function()
+        vim.keymap.set("n", "gs", "<plug>(swap-interactive)")
+    end
+}

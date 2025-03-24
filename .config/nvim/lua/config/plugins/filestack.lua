@@ -1,8 +1,6 @@
-local plugin = require("config.util.plugin")
-
-return plugin("jake-stewart/filestack.nvim")
-    -- :disable()
-    :dir("~/clones/filestack.nvim")
-    :event("VeryLazy")
-    :module("filestack")
-    :setup({})
+return require "lazier" {
+    "jake-stewart/filestack.nvim",
+    dir = "~/clones/filestack.nvim",
+    event = "VeryLazy",
+    opts = {}
+}

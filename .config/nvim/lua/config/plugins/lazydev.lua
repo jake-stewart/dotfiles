@@ -1,12 +1,10 @@
-local plugin = require("config.util.plugin")
-
-return plugin("folke/lazydev.nvim")
-    -- :disable()
-    :ft("lua")
-    :module("lazydev")
-    :setup({
+return require "lazier" {
+    "folke/lazydev.nvim",
+    ft = "lua",
+    opts = {
         library = {
             "lazy.nvim",
             "luvit-meta/library",
         }
-    })
+    }
+}

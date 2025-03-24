@@ -17,8 +17,8 @@ local TableMetatable = {}
 TableMetatable.__index = table
 
 function TableMetatable.__call(t, _, i)
-    i = (i or -1) + 1
-    local item = t[i + 1]
+    i = (i or 0) + 1
+    local item = t[i]
     if item then
         return i, item
     end
@@ -30,53 +30,33 @@ setmetatable(table, {
     end
 })
 
---- @class tablelib
---- @field [string] any
---- @operator call: tablelib
-
 --- @param container string | table
 --- @param index number
 local function wrapContainerIndex(container, index)
-    return index < 0 and #container + index + 1 or index + 1
+    return index < 0 and #container + index + 1 or index
 end
 
 --- @param len number
 --- @param index number
 local function wrapIndex(len, index)
-    return index < 0 and len + index + 1 or index + 1
+    return index < 0 and len + index + 1 or index
 end
 
 --- @param len number
 --- @param start? number
 --- @param stop? number
 local function indexRange(len, start, stop)
-    start = start or 0
+    start = start or 1
     stop = stop or len
     if start < 0 then
-        start = len + start
+        start = len + start + 1
     end
     if stop < 0 then
-        stop = len + stop
+        stop = len + stop + 1
     end
-    start = math.max(1, start + 1)
+    start = math.max(1, start)
     stop = math.min(len, stop)
     return start, stop
-end
-
-local null = vim and vim.NIL or {}
-
-local function wrapNull(value)
-    if value == nil then
-        return null
-    end
-    return value
-end
-
-local function unwrapNull(value)
-    if value == null then
-        return nil
-    end
-    return value
 end
 
 --- @generic T
@@ -101,31 +81,36 @@ end
 --- @param t table
 --- @param i integer
 --- @return any
-function table._get(t, i)
-    return unwrapNull(t[wrapContainerIndex(t, i)])
+function table._at(t, i)
+    return t[wrapContainerIndex(t, i)]
 end
 
 --- @param t table
---- @param i integer
---- @param v any
+--- @param k any
+--- @param default any
 --- @return any
-function table._set(t, i, v)
-    t[wrapContainerIndex(t, i)] = wrapNull(v)
+function table._get(t, k, default)
+    local item = t[k]
+    if item == nil then
+        t[k] = default
+        return default
+    end
+    return item
 end
 
---- @generic T tablelib | table
+--- @generic T Table | table
 --- @param t T
 --- @param ... any
 --- @return T
 function table._push(t, ...)
     local args = pack(...)
     for i = 1, args.n do
-        table.insert(t, wrapNull(args[i]))
+        table.insert(t, args[i])
     end
     return t
 end
 
---- @generic T tablelib | table
+--- @generic T Table | table
 --- @param t T
 --- @param value any
 --- @param idx? integer
@@ -133,7 +118,7 @@ end
 function table._insert(t, value, idx)
     table.insert(
         t,
-        wrapNull(value),
+        value,
         idx and wrapContainerIndex(t, idx)
     )
     return t
@@ -143,16 +128,16 @@ end
 --- @param idx? integer
 --- @return any
 function table._remove(t, idx)
-    return unwrapNull(table.remove(
+    return table.remove(
         t,
         idx and wrapContainerIndex(t, idx)
-    ))
+    )
 end
 
 --- @param t table
 --- @param start? number
 --- @param stop? number
---- @return tablelib
+--- @return Table
 function table._slice(t, start, stop)
     local result = {}
     start, stop = indexRange(#t, start, stop)
@@ -166,28 +151,27 @@ end
 --- @param start number
 --- @param deleteCount number
 --- @param ... any
---- @return tablelib
+--- @return Table
 function table._splice(t, start, deleteCount, ...)
-    local len = #t
-    deleteCount = math.max(deleteCount, 0)
-    start = wrapIndex(len, start)
-    local newItems = table.pack(...)
+    local newItems = { ... }
+    deleteCount = math.max(0, deleteCount)
+    start = wrapIndex(#t, start)
     local temp = {}
     local spliced = {}
     for i = start, start + deleteCount - 1 do
         table.insert(spliced, t[i])
     end
-    for i = start + deleteCount, len do
+    for i = start + deleteCount, #t do
         table.insert(temp, t[i])
     end
-    for i = 0, newItems.n - 1 do
-        t[start + i] = wrapNull(newItems[i + 1])
+    for i = 1, #newItems do
+        t[start + i - 1] = newItems[i]
     end
-    start = start + newItems.n - 1
+    start = start + #newItems - 1
     for i = 1, #temp do
-        t[start + i] = wrapNull(temp[i])
+        t[start + i] = temp[i]
     end
-    for _ = 1, len - (start + #temp) do
+    for _ = 1, #t - (start + #temp) do
         table.remove(t)
     end
     return table(spliced)
@@ -195,25 +179,20 @@ end
 
 --- @param t table
 function table._unpack(t)
-    for _, v in ipairs(t) do
-        if v == null then
-            local result = {}
-            for i, v2 in ipairs(t) do
-                result[i] = unwrapNull(v2)
-            end
-            return table.unpack(result, 1, #t)
-        end
-    end
     return table.unpack(t)
 end
 
 --- @param t table
---- @return table
+--- @return Table
 function table._clone(t)
-    return table({ table.unpack(t) })
+    local result = {}
+    for k, v in pairs(t) do
+        result[k] = v
+    end
+    return table(result)
 end
 
---- @generic T: tablelib | table
+--- @generic T: Table | table
 --- @param t T
 --- @param func fun(a, b): boolean
 --- @return T
@@ -222,7 +201,58 @@ function table._sort(t, func)
     return t
 end
 
---- @param ... (tablelib | table)[]
+--- @generic T: Table | table
+--- @param t T
+--- @return T
+function table._reverse(t)
+    local i = 1
+    local j = #t
+    while i < j do
+        t[i], t[j] = t[j], t[i]
+        i = i + 1
+        j = j - 1
+    end
+    return t
+end
+
+--- @param t table
+--- @return Table
+function table._uniq(t)
+    local result = {}
+    local exists = {}
+    local hasNaN = false
+    local n = 1
+    local i = 1
+    for k, v in pairs(t) do
+        if k == i then
+            i = i + 1
+            if v ~= v and type(v) == "number" then
+                if not hasNaN then
+                    hasNaN = true
+                    result[n] = v
+                    n = n + 1
+                end
+            elseif not exists[v] then
+                exists[v] = true
+                result[n] = v
+                n = n + 1
+            end
+        else
+            if v ~= v and type(v) == "number" then
+                if not hasNaN then
+                    hasNaN = true
+                    result[k] = v
+                end
+            elseif not exists[v] then
+                exists[v] = true
+                result[k] = v
+            end
+        end
+    end
+    return table(result)
+end
+
+--- @param ... (Table | table)[]
 --- @return table
 function table._concat(...)
     local result = {}
@@ -234,7 +264,7 @@ function table._concat(...)
     return table(result)
 end
 
---- @generic T tablelib | table
+--- @generic T Table | table
 --- @param t T
 --- @return T
 function table._clear(t)
@@ -246,11 +276,11 @@ end
 
 local function flatten(result, t, depth, maxDepth)
     if depth == maxDepth then
-        for _, value in ipairs(t) do
+        for _, value in pairs(t) do
             table.insert(result, value)
         end
     else
-        for _, value in ipairs(t) do
+        for _, value in pairs(t) do
             if type(value) == "table" then
                 flatten(result, value, depth + 1, maxDepth)
             else
@@ -263,35 +293,43 @@ end
 
 --- @param t table
 --- @param depth? integer
---- @return tablelib
+--- @return Table
 function table._flat(t, depth)
     return table(flatten({}, t, 0, depth or 1))
 end
 
---- @generic T: tablelib | table
+--- @generic T: Table | table
 --- @param t T
---- @param callback fun(value: any, index: integer): any
---- @return tablelib
+--- @param callback fun(value: any, k: any): any
+--- @return Table
 function table._filter(t, callback)
     local result = {}
     local n = 1
-    for i, v in ipairs(t) do
-        if callback(v, i - 1) then
-            result[n] = v
-            n = n + 1
+    local i = 1
+    for k, v in pairs(t) do
+        if k == i then
+            i = i + 1
+            if callback(v, k) then
+                result[n] = v
+                n = n + 1
+            end
+        else
+            if callback(v, k) then
+                result[k] = v
+            end
         end
     end
     return table(result)
 end
 
---- @generic T: tablelib | table
+--- @generic T: Table | table
 --- @param t T
---- @param callback fun(value: any): any
---- @return tablelib
+--- @param callback fun(value: any, k: any): any
+--- @return Table
 function table._map(t, callback)
     local result = {}
-    for i, v in ipairs(t) do
-        result[i] = wrapNull(callback(unwrapNull(v)))
+    for k, v in pairs(t) do
+        result[k] = callback(v, k)
     end
     return table(result)
 end
@@ -314,13 +352,13 @@ function table._reduce(t, reducer, initialValue)
     return accumulator
 end
 
---- @generic T tablelib | table
+--- @generic T Table | table
 --- @param t T
---- @param callback fun(value: any)
+--- @param callback fun(value: any, k: any)
 --- @return T
 function table._each(t, callback)
-    for _, v in ipairs(t) do
-        callback(unwrapNull(v))
+    for k, v in pairs(t) do
+        callback(v, k)
     end
     return t
 end
@@ -333,7 +371,7 @@ function table._join(t, sep)
 end
 
 --- @param t table
---- @return tablelib
+--- @return Table
 function table._keys(t)
     local keys = {}
     for k, _ in pairs(t) do
@@ -343,7 +381,7 @@ function table._keys(t)
 end
 
 --- @param t table
---- @return tablelib
+--- @return Table
 function table._values(t)
     local values = {}
     for _, v in pairs(t) do
@@ -353,7 +391,7 @@ function table._values(t)
 end
 
 --- @param t table
---- @return tablelib
+--- @return Table
 function table._entries(t)
     local entries = {}
     for k, v in pairs(t) do
@@ -363,26 +401,16 @@ function table._entries(t)
 end
 
 --- @param ... table
---- @return tablelib
+--- @return Table
 function table._spread(...)
     local result = {}
-    for _, t in ipairs({...}) do
-        for k, v in pairs(t) do
-            result[k] = v
-        end
-    end
-    return table(result)
-end
-
---- @param t table
---- @return tablelib
-function table._toObject(t)
-    local result = {}
-    for entry in ipairs(t) do
-        if type(entry[1]) == "number" then
-            result[entry[1]] = wrapNull(entry[2])
-        else
-            result[entry[1]] = unwrapNull(entry[2])
+    local items = pack(...)
+    for i = 1, items.n do
+        local t = items[i]
+        if t then
+            for k, v in pairs(t) do
+                result[k] = v
+            end
         end
     end
     return table(result)
@@ -408,7 +436,7 @@ function table._index(t, element, startAt)
     local len = #t
     for i = wrapIndex(len, startAt or 0), len do
         if t[i] == element then
-            return i - 1
+            return i
         end
     end
     return nil
@@ -420,9 +448,9 @@ end
 --- @return integer | nil
 function table._lastIndex(t, element, startAt)
     local len = #t
-    for i = wrapIndex(len, startAt or len - 1), 0, -1 do
+    for i = wrapIndex(len, startAt or len), 1, -1 do
         if t[i] == element then
-            return i - 1
+            return i
         end
     end
     return nil
@@ -434,9 +462,9 @@ end
 --- @return any, integer | nil
 function table._find(t, callback, startAt)
     local len = #t
-    for i = wrapIndex(len, startAt or 0), len do
-        if callback(t[i], i - 1) then
-            return i - 1
+    for i = wrapIndex(len, startAt or 1), len do
+        if callback(t[i], i) then
+            return t[i], i
         end
     end
     return nil
@@ -448,8 +476,8 @@ end
 --- @return any, integer | nil
 function table._findLast(t, callback, startAt)
     local len = #t
-    for i = wrapIndex(len, startAt or len - 1), 0, -1 do
-        if callback(t[i], i - 1) then
+    for i = wrapIndex(len, startAt or len), 1, -1 do
+        if callback(t[i], i) then
             return t[i], i
         end
     end
@@ -477,27 +505,83 @@ end
 
 --- @param s string
 --- @param i integer
-function string._get(s, i)
+function string._at(s, i)
     i = wrapContainerIndex(s, i)
     return s:sub(i, i)
 end
 
 --- @param s string
---- @param sep? string
---- @return table
-function string._split(s, sep)
-    sep = sep or ""
+--- @param sep string
+--- @param trimEmpty? boolean
+--- @return Table
+local function stringSplit(s, sep, trimEmpty)
     local result = {}
     if sep == "" then
-        for match in (s .. sep):gmatch(".") do
-            table.insert(result, match)
+        for i = 1, #s do
+            result[i] = s:sub(i, i)
         end
     else
-        for match in (s .. sep):gmatch("(.-)" .. sep) do
-            table.insert(result, match)
+        local idx = 1
+        while true do
+            local start, stop = s:find(sep, idx, true)
+            if not start then
+                break
+            end
+            if not trimEmpty or idx < start then
+                table.insert(result, s:sub(idx, start - 1))
+            end
+            idx = stop + 1
+        end
+        if not trimEmpty or idx <= #s then
+            table.insert(result, s:sub(idx, #s))
         end
     end
     return table(result)
+end
+
+--- @param s string
+--- @param re vim.regex | string
+--- @return number | nil, number | nil
+function string._match(s, re)
+    if type(re) == "string" then
+        re = vim.regex(re)
+    end
+    return re:match_str(s)
+end
+
+--- @param s string
+--- @param re vim.regex
+--- @param trimEmpty? boolean
+--- @return Table
+local function regexSplit(s, re, trimEmpty)
+    local result = {}
+    while true and #s > 0 do
+        local start, stop = re:match_str(s)
+        if not start then
+            break
+        end
+        if not trimEmpty or start > 0 then
+            table.insert(result, s:sub(1, start))
+        end
+        s = s:sub(stop + 1, #s)
+    end
+    if not trimEmpty or #s > 0 then
+        table.insert(result, s)
+    end
+    return table(result)
+end
+
+--- @param s string
+--- @param sep? string | vim.regex
+--- @param trimEmpty? boolean
+--- @return Table
+function string._split(s, sep, trimEmpty)
+    sep = sep or ""
+    if type(sep) == "string" then
+        return stringSplit(s, sep, trimEmpty)
+    else
+        return regexSplit(s, sep, trimEmpty)
+    end
 end
 
 string._upper = string.upper
@@ -516,7 +600,7 @@ end
 function string._padLeft(s, length, padChar)
     local padLength = length - #s
     if padLength > 0 then
-        return padChar:rep(padLength) .. s
+        return (padChar or " "):rep(padLength) .. s
     else
         return s
     end
@@ -529,7 +613,7 @@ end
 function string._padRight(s, length, padChar)
     local padLength = length - #s
     if padLength > 0 then
-        return s .. padChar:rep(padLength)
+        return s .. (padChar or " "):rep(padLength)
     else
         return s
     end
@@ -569,15 +653,26 @@ end
 --- @param startAt? integer
 --- @return integer | nil
 function string._index(s, substring, startAt)
-    local _, index = s:find(
+    return s:find(
         substring,
-        wrapContainerIndex(s, startAt or 0),
+        wrapContainerIndex(s, startAt or 1),
         true
     )
-    if not index then
-        return nil
+end
+
+local function findLastIndexRecurse(s, substring, idx, maxIdx)
+    local start, stop = s:find(substring, idx, true)
+    if start and stop <= maxIdx then
+        local pivot = math.ceil((maxIdx - start) / 2)
+        if pivot <= 1 then
+            return findLastIndexRecurse(s, substring, start + 1, maxIdx)
+                or start
+        else
+            return findLastIndexRecurse(s, substring, start + pivot, maxIdx)
+                or findLastIndexRecurse(s, substring, start + 1, maxIdx)
+                or start
+        end
     end
-    return index - 1
 end
 
 --- @param s string
@@ -585,18 +680,7 @@ end
 --- @param startAt? integer
 --- @return integer | nil
 function string._lastIndex(s, substring, startAt)
-    local index = nil
-    substring = substring
-    local len = #s
-    local i = wrapIndex(len, startAt or len - 1) - #substring + 1
-    while i > 0 do
-        local start = s:find(substring, i, true)
-        if start then
-            return start - 1
-        end
-        i = i - #substring
-    end
-    return index
+    return findLastIndexRecurse(s, substring, 1, wrapContainerIndex(s, startAt or -1))
 end
 
 --- @param s string
@@ -605,7 +689,73 @@ function string._surround(s, left, right)
 end
 
 --- @param s string
-function string._replace(s, search, replace)
-    local result, _ = s:gsub(search, replace)
-    return result
+--- @param re vim.regex
+--- @param replacer fun(integer, integer): string
+--- @param count number
+--- @return string
+local function regexReplace(s, re, replacer, count)
+    local result = {}
+    local offset = 1
+    while #s > 0 and count > 0 do
+        local start, stop = re:match_str(s)
+        if not start then
+            break
+        end
+        table.insert(result, s:sub(1, start))
+        table.insert(result,
+            replacer(offset + start, offset + stop - 1))
+        s = s:sub(stop + 1, #s)
+        offset = offset + stop
+        count = count - 1
+    end
+    table.insert(result, s)
+    return table.concat(result, "")
 end
+
+--- @param s string
+--- @param search string
+--- @param replacer function(integer, integer): string
+--- @param count number
+--- @return string
+local function stringReplace(s, search, replacer, count)
+    local result = {}
+    local idx = 1
+    while count > 0 do
+        local start, stop = s:find(search, idx, true)
+        if not start then
+            break
+        end
+        table.insert(result, s:sub(idx, start - 1))
+        table.insert(result, replacer(start, stop))
+        count = count - 1
+        idx = stop + 1
+    end
+    table.insert(result, s:sub(idx, #s))
+    return table.concat(result, "")
+end
+
+--- @param s string
+--- @param search string | vim.regex
+--- @param replace string | fun(string, integer): string
+--- @param count? integer
+--- @return string
+function string._replace(s, search, replace, count)
+    local replacer = type(replace) == "function"
+        and function(start, stop)
+            return replace(s:sub(start, stop), start)
+        end
+        or function()
+            return replace
+        end
+    if type(search) == "string" then
+        return stringReplace(s, search, replacer, count or math.huge)
+    else
+        return regexReplace(s, search, replacer, count or math.huge)
+    end
+end
+
+--- @class Table : tablelib, table
+--- @field [string] any
+
+--- @class tablelib
+--- @operator call: Table

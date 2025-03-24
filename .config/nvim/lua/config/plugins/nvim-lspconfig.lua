@@ -1,10 +1,14 @@
-local plugin = require("config.util.plugin")
+require "sanity"
 
 local C_STYLE_COMMENT = "//\\ %s"
 
 local SERVER_CONFIGURATIONS = table({
     clangd = {
         filetypes = { "cpp", "c" },
+        commentstring = C_STYLE_COMMENT,
+    },
+    zls = {
+        filetypes = { "zig" },
         commentstring = C_STYLE_COMMENT,
     },
     jdtls = {
@@ -107,13 +111,11 @@ local SERVER_CONFIGURATIONS = table({
         }
     end
 })
-    :_entries()
-    :_map(function(entry)
-        local k, config = entry:unpack()
+    :_map(function(config)
         if type(config) == "function" then
-            return table({ k, config() })
+            return config()
         end
-        return entry
+        return config
     end)
 
 local MAPPINGS = {
@@ -142,21 +144,16 @@ local MAPPINGS = {
     end,
 }
 
-
-return plugin("neovim/nvim-lspconfig")
-    -- :disable()
-    :module("lspconfig", "cmp_nvim_lsp")
-    :deps("hrsh7th/nvim-cmp")
-    :ft(SERVER_CONFIGURATIONS
-        :_map(function(entry)
-            return entry:_get(1).filetypes
+return require "lazier" {
+    "neovim/nvim-lspconfig",
+    ft = SERVER_CONFIGURATIONS
+        :_map(function(config)
+            return config.filetypes
         end)
         :_flat()
-    )
-    :setup(function(lspconfig, cmp_nvim_lsp)
-        local capabilities = cmp_nvim_lsp.default_capabilities()
-        capabilities.textDocument.completion
-            .completionItem.snippetSupport = true
+        :_uniq(),
+    config = function()
+        local lspconfig = require("lspconfig")
 
         local function onAttach(client, bufnr, opts)
             client.server_capabilities.semanticTokensProvider = nil
@@ -173,14 +170,14 @@ return plugin("neovim/nvim-lspconfig")
         end
 
         local defaultOpts = {
-            capabilities = capabilities,
+            capabilities = {},
             inlay_hints = {enabled = true},
             on_attach = onAttach,
             init_options = {preferences = {disableSuggestions = true}},
         }
 
-        SERVER_CONFIGURATIONS:_each(function(entry)
-	    local server, opts = entry:unpack()
-            lspconfig[server].setup(table._spread(opts, defaultOpts))
+        SERVER_CONFIGURATIONS:_each(function(opts, k)
+            lspconfig[k].setup(table._spread(opts, defaultOpts))
         end)
-    end)
+    end
+}

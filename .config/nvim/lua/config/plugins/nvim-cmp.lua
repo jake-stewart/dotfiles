@@ -1,5 +1,3 @@
-local plugin = require("config.util.plugin")
-
 local ITEM_ICONS = {
     Field = "V",
     Variable = "V",
@@ -43,18 +41,19 @@ local WINHIGHLIGHT = vim.iter({
     :map(function(k, v) return k .. ":" .. v end)
     :join(",")
 
-return plugin("hrsh7th/nvim-cmp")
-    -- :disable()
-    :module("cmp")
-    :deps(
+return require "lazier" {
+    "hrsh7th/nvim-cmp",
+    enabled = false,
+    dependencies = {
         "hrsh7th/cmp-nvim-lsp",
         "hrsh7th/cmp-buffer",
         "hrsh7th/cmp-path",
         "hrsh7th/cmp-cmdline",
         "hrsh7th/cmp-nvim-lsp-signature-help"
-    )
-    :event("InsertEnter")
-    :setup(function(cmp)
+    },
+    event = "InsertEnter",
+    config = function()
+        local cmp = require("cmp")
         cmp.setup({
             mapping = cmp.mapping.preset.insert({
                 ["<up>"] = cmp.mapping.confirm({
@@ -92,4 +91,5 @@ return plugin("hrsh7th/nvim-cmp")
                 end
             }
         })
-    end)
+    end
+}

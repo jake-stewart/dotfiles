@@ -1,13 +1,12 @@
-local plugin = require("config.util.plugin")
-
-return plugin("kylechui/nvim-surround")
-    -- :disable()
-    :module("nvim-surround")
-    :map("n", "ys")
-    :map("n", "cs")
-    :map("n", "ds")
-    :map("v", "ys")
-    :setup({
+return require "lazier" {
+    "kylechui/nvim-surround",
+    keys = {
+        { "ys", mode = "n" },
+        { "cs", mode = "n" },
+        { "ds", mode = "n" },
+        { "ys", mode = "v" },
+    },
+    opts = {
         keymaps = {
             insert = false,
             insert_line = false,
@@ -20,4 +19,5 @@ return plugin("kylechui/nvim-surround")
             delete = "ds",
             change = "cs"
         }
-    })
+    }
+}

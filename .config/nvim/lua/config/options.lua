@@ -19,12 +19,11 @@ vim.o.title = true
 vim.o.titlestring = "%t%( %M%)"
 
 -- UI
-vim.o.guicursor = "a:block,i:ver1,r:hor1"
+vim.o.guicursor = "a:block-blinkon250,i:ver1,r:hor1"
 vim.o.laststatus = 0
 vim.o.cursorline = true
 vim.o.shortmess = vim.o.shortmess .. "I"
 vim.o.ruler = true
-vim.o.listchars = vim.o.listchars .. ",eol:$"
 vim.o.number = true
 vim.o.signcolumn = "number"
 vim.o.showmode = false
@@ -34,6 +33,9 @@ vim.diagnostic.config({
     virtual_text = false,
     severity_sort = true,
 })
+-- vim.o.listchars = "tab:< >,space:⋅,lead: ,nbsp:+"
+vim.o.listchars = "tab:< >,nbsp:+"
+vim.o.list = true
 
 -- LONG LINES
 vim.o.wrap = false
@@ -81,3 +83,5 @@ vim.o.foldmethod = "marker"
 vim.o.path = "**"
 vim.o.showmatch = true
 vim.o.joinspaces = false
+
+vim.g.zig_fmt_autosave = 0

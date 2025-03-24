@@ -38,16 +38,16 @@ group:au({
     end
 })
 
-group:au({
-    event = "BufRead",
-    pattern = "*.md",
-    callback = function()
-        local set = vim.keymap.set
-        local opts = { buffer = true }
-        set("n", "<leader>t-", "yyp0v$r-k", opts)
-        set("n", "<leader>t=", "yyp0v$r=k", opts)
-    end
-})
+-- group:au({
+--     event = "BufRead",
+--     pattern = "*.md",
+--     callback = function()
+--         local set = vim.keymap.set
+--         local opts = { buffer = true }
+--         set("n", "<leader>t-", "yyp0v$r-k", opts)
+--         set("n", "<leader>t=", "yyp0v$r=k", opts)
+--     end
+-- })
 
 local function createReactComponent()
     local name = vim.fn.input({prompt = "Component Name: "})

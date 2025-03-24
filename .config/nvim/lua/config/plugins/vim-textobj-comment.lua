@@ -1,7 +1,8 @@
-local plugin = require("config.util.plugin")
-
-return plugin("glts/vim-textobj-comment")
-    :deps("kana/vim-textobj-user")
-    :map("o", "ic")
-    :map("o", "ac")
-    :setup()
+return require "lazier" {
+    "glts/vim-textobj-comment",
+    dependencies = { "kana/vim-textobj-user" },
+    keys = {
+        { "ic", mode = { "o", "v" } },
+        { "ac", mode = { "o", "v" } },
+    }
+}

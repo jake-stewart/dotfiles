@@ -1,6 +1,5 @@
-local plugin = require("config.util.plugin")
-
-return plugin("jake-stewart/vim-abolish")
-    :map("n", "cr")
-    :cmd("S", "Subvert")
-    :setup()
+return require "lazier" {
+    "jake-stewart/vim-abolish",
+    cmd = {"S", "Subvert" },
+    keys = { "cr" }
+}

@@ -1,11 +1,11 @@
-local plugin = require("config.util.plugin")
-
-return plugin("chaoren/vim-wordmotion")
-    -- :disable()
-    :map({ "n", "x", "o" }, "<leader>w")
-    :map({ "n", "x", "o" }, "<leader>b")
-    :map({ "n", "x", "o" }, "<leader>e")
-    :init(function()
+return require "lazier" {
+    "chaoren/vim-wordmotion",
+    keys = {
+        {"<leader>w", mode = { "n", "x", "o" }},
+        {"<leader>b", mode = { "n", "x", "o" }},
+        {"<leader>e", mode = { "n", "x", "o" }}
+    },
+    init = function()
         vim.g.wordmotion_prefix = "<leader>"
-    end)
-    :setup()
+    end
+}
