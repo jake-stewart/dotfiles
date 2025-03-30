@@ -1,7 +1,7 @@
 return require "lazier" {
     "jake-stewart/shnippet.nvim",
     dir = "~/clones/shnippet.nvim",
-    event = "InsertEnter",
+    event = "VeryLazy",
     opts = {
         leader = "<c-f>",
         keys = {

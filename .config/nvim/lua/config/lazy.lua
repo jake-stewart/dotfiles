@@ -1,30 +1,36 @@
-local lazierpath = vim.fn.stdpath("data") .. "/lazier.nvim"
-if not (vim.loop.fs_stat(lazierpath)) then
-    vim.fn.system({
-        "git",
-        "clone",
-        "--filter=blob:none",
-        "https://github.com/jake-stewart/lazier.nvim.git",
-        "--branch=stable",
-        lazierpath
-    })
+local function echo(message, hl)
+    vim.api.nvim_echo({{ message, hl or "Normal" }}, true, {})
 end
-vim.opt.runtimepath:prepend(lazierpath)
 
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not (vim.loop.fs_stat(lazypath)) then
-    vim.fn.system({
-        "git",
-        "clone",
-        "--filter=blob:none",
-        "https://github.com/folke/lazy.nvim.git",
-        "--branch=stable",
-        lazypath
-    })
+local function bootstrap(repo, path, overridePath)
+    path = vim.fn.stdpath("data") .. path
+    if not vim.uv.fs_stat(overridePath or path) then
+        repo = "https://github.com/" .. repo
+        local out = vim.fn.system({
+            "git",
+            "clone",
+            "--branch=stable",
+            "--filter=blob:none",
+            repo,
+            path
+        })
+        if vim.v.shell_error ~= 0 then
+            echo("Failed to clone " .. repo .. ":", "Error")
+            echo(out)
+            vim.fn.getchar()
+            os.exit(1)
+        end
+    end
+    vim.opt.runtimepath:prepend(overridePath or path)
 end
-vim.opt.runtimepath:prepend(lazypath)
 
-require("lazy").setup("config.plugins", {
+bootstrap("jake-stewart/lazier.nvim", "/lazier.nvim", "/Users/jakey/clones/lazier.nvim")
+bootstrap("folke/lazy.nvim", "/lazy/lazy.nvim")
+
+require("lazier.setup")("config.plugins", {
+    after_lazy = function()
+        require "config.mappings"
+    end,
     install = {
         colorscheme = { "custom" }
     },

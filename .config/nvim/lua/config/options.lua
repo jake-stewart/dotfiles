@@ -1,6 +1,7 @@
 vim.g.mapleader = " "
 
 -- PERFORMANCE
+vim.o.history = 100
 vim.o.ttimeoutlen = 1
 vim.o.lazyredraw = true
 vim.o.updatetime = 300

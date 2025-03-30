@@ -5,6 +5,7 @@
 local augroup = require("config.util.augroup")
 
 vim.o.termguicolors = false
+vim.g.colors_name = "custom"
 
 -- COLOR PALETTE {{{
 

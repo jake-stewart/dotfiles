@@ -9,7 +9,7 @@ local pack = function(...)
 end
 
 local unpack = function(t)
-    return unpack(t, 1, t.n)
+    return table.unpack(t, 1, t.n)
 end
 
 local TableMetatable = {}
@@ -361,6 +361,32 @@ function table._each(t, callback)
         callback(v, k)
     end
     return t
+end
+
+--- @generic T Table | table
+--- @param t T
+--- @param callback fun(value: any, k: any): boolean | nil
+--- @return boolean
+function table._any(t, callback)
+    for k, v in pairs(t) do
+        if callback(v, k) then
+            return true
+        end
+    end
+    return false
+end
+
+--- @generic T Table | table
+--- @param t T
+--- @param callback fun(value: any, k: any): boolean | nil
+--- @return boolean
+function table._all(t, callback)
+    for k, v in pairs(t) do
+        if not callback(v, k) then
+            return false
+        end
+    end
+    return true
 end
 
 --- @param t table

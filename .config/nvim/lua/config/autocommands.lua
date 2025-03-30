@@ -1,6 +1,4 @@
-local camelSplit = require("config.util.camel-split")
 local augroup = require("config.util.augroup")
-
 local group = augroup("CustomAutocommands")
 
 group:au({
@@ -54,7 +52,7 @@ local function createReactComponent()
     if not name then
         return
     end
-    local formattedName = camelSplit(name)
+    local formattedName = require("config.util.camel-split")(name)
         :map(function(s)
             return s:_get(0):_upper() .. s:_slice(1):_lower()
         end)

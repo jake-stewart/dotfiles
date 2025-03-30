@@ -1,6 +1,6 @@
 return require "lazier" {
     "Saghen/blink.cmp",
-    event = "InsertEnter",
+    event = "VeryLazy",
     opts = {
         signature = {
             enabled = true,

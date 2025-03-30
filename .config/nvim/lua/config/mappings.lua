@@ -1,5 +1,3 @@
-local errorScanner = require("config.scanner")
-
 local map = vim.keymap.set
 
 local function mapExpr(mode, key, rhs)
@@ -143,11 +141,11 @@ map({"n", "v"}, "y", "<NOP>")
 map("n", "<leader>i", "~hi")
 
 map("n", "<leader>E", function()
-    errorScanner(vim.diagnostic.severity.ERROR)
+    require("config.scanner")(vim.diagnostic.severity.ERROR)
 end)
 
 map("n", "<leader>W", function()
-    errorScanner(vim.diagnostic.severity.WARN)
+    require("config.scanner")(vim.diagnostic.severity.WARN)
 end)
 
 map("n", "<leader>o", vim.cmd.copen)
