@@ -32,7 +32,7 @@ local function bootstrap(author, name, opts)
     vim.opt.runtimepath:prepend(path)
 end
 
-bootstrap("jake-stewart", "lazier", {dir = "/Users/jakey/clones/lazier.nvim"})
+bootstrap("jake-stewart", "lazier")
 bootstrap("folke", "lazy")
 
 require("lazier").setup("config.plugins", {
