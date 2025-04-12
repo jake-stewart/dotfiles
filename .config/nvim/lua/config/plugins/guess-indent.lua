@@ -1,6 +1,6 @@
 return require "lazier" {
     "NMAC427/guess-indent.nvim",
-    lazy = false,
+    event = "VeryLazy",
     config = function()
         local guessIndent = require("guess-indent")
         guessIndent.setup({

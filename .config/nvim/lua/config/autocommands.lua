@@ -1,6 +1,16 @@
 local augroup = require("config.util.augroup")
 local group = augroup("CustomAutocommands")
 
+if vim.cmd.LazierClear then
+    group:au({
+        event = "BufWritePost",
+        pattern = vim.fn.stdpath("config") .. "/*",
+        callback = function()
+            vim.cmd.LazierClear()
+        end
+    })
+end
+
 group:au({
     event = "BufEnter",
     callback = function()

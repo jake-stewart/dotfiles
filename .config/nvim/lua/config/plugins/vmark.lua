@@ -1,7 +1,7 @@
 return require "lazier" {
     "jake-stewart/vmark.nvim",
     dir = "~/clones/vmark.nvim",
-    event = "BufRead",
+    event = "VeryLazy",
     config = function()
         local vmark = require("vmark")
 

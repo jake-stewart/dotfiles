@@ -1,6 +1,6 @@
 return require "lazier" {
     "echasnovski/mini.ai",
-    lazy = false,
+    event = "VeryLazy",
     opts = {
         -- Table with textobject id as fields, textobject specification as values.
         -- Also use this to disable builtin textobjects. See |MiniAi.config|.

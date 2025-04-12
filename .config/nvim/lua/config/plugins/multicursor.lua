@@ -3,10 +3,11 @@ return require "lazier" {
     dir = "~/clones/multicursor.nvim",
     config = function()
         local mc = require("multicursor-nvim")
-
         mc.setup()
 
         mc.addKeymapLayer(function(set)
+            set({"n", "v"}, "H", function() mc.swapCursors(-1) end)
+            set({"n", "v"}, "L", function() mc.swapCursors(1) end)
             set("n", "<esc>", function()
                 if not mc.cursorsEnabled() then
                     mc.enableCursors()
@@ -29,8 +30,6 @@ return require "lazier" {
         map("n", "<leader>a", mc.alignCursors)
         map({"n", "v"}, "<c-h>", mc.prevCursor)
         map({"n", "v"}, "<c-l>", mc.nextCursor)
-        map({"n", "v"}, "H", function() mc.swapCursors(-1) end)
-        map({"n", "v"}, "L", function() mc.swapCursors(1) end)
         map({"n", "v"}, "<leader>x", mc.deleteCursor)
 
         map({"n", "v"}, "<leader>da", mc.diagnosticAddCursor)
@@ -67,10 +66,10 @@ return require "lazier" {
             end)
         end)
 
-        vim.api.nvim_set_hl(0, "MultiCursorCursor", { ctermbg = 250, ctermfg = "black" })
-        vim.api.nvim_set_hl(0, "MultiCursorVisual", { link = "Visual" })
-        vim.api.nvim_set_hl(0, "MultiCursorDisabledCursor", { ctermbg = 240, ctermfg = "white" })
-        vim.api.nvim_set_hl(0, "MultiCursorDisabledVisual", { link = "Visual" })
-        vim.api.nvim_set_hl(0, "MultiCursorMainSign", { link = "CursorLineSign" })
+        -- vim.api.nvim_set_hl(0, "MultiCursorCursor", { ctermbg = 250, ctermfg = "black" })
+        -- vim.api.nvim_set_hl(0, "MultiCursorVisual", { link = "Visual" })
+        -- vim.api.nvim_set_hl(0, "MultiCursorDisabledCursor", { ctermbg = 240, ctermfg = "white" })
+        -- vim.api.nvim_set_hl(0, "MultiCursorDisabledVisual", { link = "Visual" })
+        -- vim.api.nvim_set_hl(0, "MultiCursorMainSign", { link = "CursorLineSign" })
     end,
 }

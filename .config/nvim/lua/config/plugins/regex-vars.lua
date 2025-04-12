@@ -10,17 +10,19 @@ local NUM_REGEX = "((\\d+(\\.\\d*)?|\\.\\d+)(e\\d+)?|0x\\d+|\\d+)"
 
 return require "lazier" {
     "jake-stewart/regex-vars.nvim",
-    keys = { "/", mode = {"n", "v"} },
+    dir = "~/clones/regex-vars.nvim",
+    keys = {{ "/", mode = {"n", "v"} }},
+    lazy = false,
     config = function()
         local rv = require("regex-vars")
-
         rv.setup({
-            [rv.escape("\\email")] = EMAIL_REGEX,
-            [rv.escape("\\q")] = QUOTE_REGEX,
-            [rv.escape("\\bool")] = BOOL_REGEX,
-            [rv.escape("\\str")] = STRING_REGEX,
-            [rv.escape("\\num")] = NUM_REGEX,
-            [rv.escape("\\int")] = INT_REGEX,
+            ["\\email"] = EMAIL_REGEX,
+            ["\\q"] = QUOTE_REGEX,
+            ["\\bool"] = BOOL_REGEX,
+            ["\\str"] = STRING_REGEX,
+            ["\\num"] = NUM_REGEX,
+            ["\\int"] = INT_REGEX,
         })
+        -- rv.test()
     end
 }

@@ -147,9 +147,7 @@ local MAPPINGS = {
 return require "lazier" {
     "neovim/nvim-lspconfig",
     ft = SERVER_CONFIGURATIONS
-        :_map(function(config)
-            return config.filetypes
-        end)
+        :_map(function(config) return config.filetypes end)
         :_flat()
         :_uniq(),
     config = function()
@@ -157,8 +155,8 @@ return require "lazier" {
 
         local function onAttach(client, bufnr, opts)
             client.server_capabilities.semanticTokensProvider = nil
-            vim.iter(MAPPINGS):each(function(from, to)
-                vim.keymap.set("n", from, to, {
+            table(MAPPINGS):_each(function(v, k)
+                vim.keymap.set("n", k, v, {
                     remap = false,
                     silent = true,
                     buffer = bufnr,
@@ -167,6 +165,13 @@ return require "lazier" {
             if opts and opts.commentstring then
                 vim.cmd.setlocal("commentstring=" .. opts.comment)
             end
+            -- vim.lsp.completion.enable(true, client.id, bufnr, {
+            --     autotrigger = true,
+            --     convert = function(item)
+            --         return { abbr = item.label:gsub("%b()", "") }
+            --     end,
+            -- })
+            -- vim.keymap.set("i", "<C-n>", vim.lsp.completion.get, { desc = "trigger autocompletion" })
         end
 
         local defaultOpts = {

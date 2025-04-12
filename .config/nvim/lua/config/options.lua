@@ -59,19 +59,6 @@ vim.o.expandtab = true
 vim.o.shiftwidth = 4
 vim.o.softtabstop = 1
 vim.o.smarttab = true
--- UNDO
-vim.o.undofile = true
-vim.o.undodir = os.getenv("HOME") .. "/.cache/nvim/undo"
-vim.o.undolevels = 5000
-
-if vim.o.undodir
-    :_pipe(vim.fn.expand)
-    :_pipe(vim.fn.isdirectory) == 0
-then
-    vim.o.undodir
-        :_pipe(vim.fn.expand)
-        :_pipe(vim.fn.mkdir, "p", 770)
-end
 
 -- OTHER
 vim.o.hidden = true
@@ -86,3 +73,6 @@ vim.o.showmatch = true
 vim.o.joinspaces = false
 
 vim.g.zig_fmt_autosave = 0
+vim.g.loaded_python3_provider = 0
+vim.g.loaded_ruby_provider = 0
+vim.g.loaded_node_provider = 0

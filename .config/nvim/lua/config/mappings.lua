@@ -65,7 +65,6 @@ map("n", "t<c-g>", function()
 end)
 
 map("n", "<space>", "<NOP>")
-map("n", ",", "<NOP>")
 
 map("n", "<leader>gf", forceGoFile)
 
@@ -79,8 +78,44 @@ map("n", "U", "<c-r>")
 map({"i", "c"}, "<up>", "<c-k>")
 
 -- default <c-u> and <c-d> are disorientating
-map("n", "<c-u>", "10k")
-map("n", "<c-d>", "10j")
+-- map("n", "<c-u>", "10k")
+-- map("n", "<c-d>", "10j")
+
+local function setupScroller()
+    local state = {
+        scrolling = false,
+        didscroll = false
+    }
+    vim.api.nvim_create_autocmd("CursorMoved", {
+        pattern = "*",
+        callback = function()
+            if not state.didscroll then
+                state.scrolling = false
+            end
+            state.didscroll = false
+        end
+    })
+
+    local function scroller(key)
+        return function()
+            state.didscroll = true
+            if state.scrolling then
+                vim.api.nvim_feedkeys("10" .. key .. "zz", "nx", false)
+            else
+                state.scrolling = true
+                vim._with({ keepjumps = true }, function()
+                    vim.api.nvim_feedkeys("M10" .. key .. "zz", "nx", false)
+                end)
+            end
+        end
+    end
+
+    map({"n", "x"}, "<c-u>", scroller("k"))
+    map({"n", "x"}, "<c-d>", scroller("j"))
+end
+
+setupScroller()
+
 
 -- zero width space digraph
 -- vim.cmd.digraphs("zs " .. 8203)
@@ -114,9 +149,6 @@ map({"n", "v", "o"}, "gm", "%")
 -- 'A' is annoying because you have to release shift
 -- this causes me to type ':' instead of ';' very often
 map({"n", "v"}, "ga", "A")
-
-map("n", "H", "H^")
-map("n", "L", "L^")
 
 -- I center screen all the time, zz is slow and hurts my finger
 map({"n", "v"}, "gb", "zz")
@@ -165,3 +197,21 @@ map({"n", "v"}, "-x", "\"_x")
 map({"n", "v"}, "<c-_>", "/\\v")
 map({"n", "v"}, "<c-/>", "/\\v")
 map({"n", "v"}, "<leader>gq", ":!fmt -80 | sed 's/\\.  /. /g'<cr>")
+
+map("n", "l", function()
+    if vim.fn.foldclosed(".") ~= -1 then
+        return "zo"
+    end
+    return "l"
+end, { expr = true })
+
+map("n", "h", function()
+    if vim.fn.col(".") == 1 then
+        if vim.fn.foldclosed(".") == -1 then
+            if vim.fn.foldlevel(".") > 0 then
+                return "zc"
+            end
+        end
+    end
+    return "h"
+end, { expr = true })

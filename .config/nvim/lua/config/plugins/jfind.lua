@@ -1,3 +1,5 @@
+require "sanity"
+
 return require "lazier" {
     "jake-stewart/jfind.nvim",
     dir = "~/clones/jfind.nvim",

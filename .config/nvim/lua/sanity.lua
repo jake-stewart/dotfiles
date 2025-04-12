@@ -512,20 +512,21 @@ end
 
 
 --- @generic T
---- @param s string
+--- @param s any
 --- @param fn fun(string, ...): T
 --- @param ... any
 --- @return T
 function string._pipe(s, fn, ...)
-    return fn(s, unpack(pack(...)))
+    return fn(s, ...)
 end
 
---- @param s string
+--- @generic T
+--- @param s any
 --- @param fn fun(string, ...)
 --- @param ... any
---- @return string
+--- @return T
 function string._peek(s, fn, ...)
-    fn(s, unpack(pack(...)))
+    fn(s, ...)
     return s
 end
 
