@@ -21,9 +21,6 @@ UPPER_VK_LOOKUP = {
     "|": 42, "<": 43, "?": 44, "N": 45, "M": 46, ">": 47, "~": 50
     }
 
-time.sleep(1)
-
-
 def typeSlowly(string, delayPerChar=0.001):
     for char in string:
         if 32 < ord(char) <= 127:
