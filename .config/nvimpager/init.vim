@@ -1,20 +1,6 @@
-" ooooo      ooo              o8o                    
-" `888b.     `8'              `"'                    
-"  8 `88b.    8  oooo    ooo oooo  ooo. .oo.  .oo.   
-"  8   `88b.  8   `88.  .8'  `888  `888P"Y88bP"Y88b  
-"  8     `88b.8    `88..8'    888   888   888   888  
-"  8       `888     `888'     888   888   888   888  
-" o8o        `8      `8'     o888o o888o o888o o888o 
-"
-" ooooooooo.                                           
-" `888   `Y88.                                         
-"  888   .d88'  .oooo.    .oooooooo  .ooooo.  oooo d8b 
-"  888ooo88P'  `P  )88b  888' `88b  d88' `88b `888""8P 
-"  888          .oP"888  888   888  888ooo888  888     
-"  888         d8(  888  `88bod8P'  888    .o  888     
-" o888o        `Y888""8o `8oooooo.  `Y8bod8P' d888b    
-"                        d"     YD                     
-"                        "Y88888P'                     
+" ┌─╮╶╮╷╶┬╴╭┬╮┌─╮╭─╮╭─╮╭─╴┌─╮   ╭─╮╭─╮┌─╮╭─╴╶┬╴╭─╮
+" │ │ ││ │ │││├─╯├─┤│╶┐├─ ├┬╯   │  │ ││ │├─╴ │ │╶┐
+" ╵ ╵ ╰╯╶┴╴╵ ╵╵  ╵ ╵╰─╯╰─╴╵╰╴   ╰─╯╰─╯╵ ╵╵  ╶┴╴╰─╯
 
 " SETTINGS {{{
 
@@ -26,7 +12,6 @@ set clipboard^=unnamed,unnamedplus  " make vim use system clipboard
 set lazyredraw                      " run macros without updating screen
 set encoding=utf-8                  " unicode characters
 set ttimeoutlen=1                   " time waited for terminal codes
-set guioptions=c!                   " remove gvim widgets
 set noshowmode                      " hide --INSERT--
 set laststatus=0                    " hide statusbar
 set belloff=all                     " disable sound
