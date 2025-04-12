@@ -1,25 +1,22 @@
+# ╶╮  ╭─             ╭─ ·    
+#  │ ╶┼─   ╭─╮╭─╮┌─╮╶┼─╶╮ ╭─╮
+#  │  │    │  │ ││ │ │  │ │ │
+# ╶┴╴ ╵    ╰─╯╰─╯╵ ╵ ╵ ╶┴╴╰─┤
+#                         ╰─╯
 
-# oooo   .o88o. 
-# `888   888 `" 
-#  888  o888oo  
-#  888   888    
-#  888   888    
-#  888   888    
-# o888o o888o   
-              
 # SETTINGS {{{
 
 set incsearch
 set hidden
-# set previewer ~/.config/lf/bat_preview
-
 set previewer ~/.config/lf/preview.sh
-set cleaner ~/.config/lf/clean.sh
 
 map <c-g> push :glob-select<space>
 
 set mouse
 cmd open  # disable 'l' to 'open' files
+cmd q quit
+
+set watch true
 
 set cursoractivefmt   "\033[7m"
 set cursorparentfmt   "\033[7m"
@@ -44,18 +41,19 @@ map <esc> :clear; unselect
 map v toggle
 map V :toggle; down
 
-cmd edit ${{
+# cmd edit $"$HOME/.config/lf/edit/main" "$f"
+
+cmd edit &{{
     case $(file --mime-type -Lb "$f") in
-        text/* \
-        | application/json)
-            nvim "$f";;
         image/*)
             ~/.config/tmux/popup-image.py popup "$f" > /dev/tty 2>/dev/null &;;
+        *)
+            lf -remote "send $id \$$EDITOR \$fx";;
     esac
 }}
 
 map e edit
-map o ${{open "$f"}}
+map o &{{open "$f"}}
 
 # }}}
 

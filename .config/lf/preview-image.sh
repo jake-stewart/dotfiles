@@ -22,44 +22,44 @@ hash() {
         "$(gstat --printf '%n\0%i\0%F\0%s\0%W\0%Y' -- "$(readlink -f "$1")" | md5 -q | awk '{print $1}')"
     }
 
-    IMAGE_CACHE_PATH="$(hash "$FILE_PATH")" # Full path that should be used to cache image preview
+IMAGE_CACHE_PATH="$(hash "$FILE_PATH")" # Full path that should be used to cache image preview
 
-    handle_image() {
-        local DEFAULT_SIZE
-        DEFAULT_SIZE="1024x768"
-        case "${MIME_TYPE}" in
+handle_image() {
+    local DEFAULT_SIZE
+    DEFAULT_SIZE="1024x768"
+    case "${MIME_TYPE}" in
 
-            image/svg+xml | image/svg)
-                rsvg-convert --keep-aspect-ratio --width "${DEFAULT_SIZE%x*}" "${FILE_PATH}" -o "${IMAGE_CACHE_PATH}.png" &&
-                    mv "${IMAGE_CACHE_PATH}.png" "${IMAGE_CACHE_PATH}" &&
-                    return 6
-                                    return 1
-                                    ;;
+        image/svg+xml | image/svg)
+            rsvg-convert --keep-aspect-ratio --width "${DEFAULT_SIZE%x*}" "${FILE_PATH}" -o "${IMAGE_CACHE_PATH}.png" &&
+                mv "${IMAGE_CACHE_PATH}.png" "${IMAGE_CACHE_PATH}" &&
+                return 6
+            return 1
+            ;;
 
-                                image/*)
-                                    local orientation
-                                    orientation="$(identify -format '%[EXIF:Orientation]\n' -- "${FILE_PATH}")"
-                                    ## If orientation data is present and the image actually
-                                    ## needs rotating ("1" means no rotation)...
-                                    if [[ -n "$orientation" && "$orientation" != 1 ]]; then
-                                        ## ...auto-rotate the image according to the EXIF data.
-                                        convert -- "${FILE_PATH}" -auto-orient "${IMAGE_CACHE_PATH}" && return 6
-                                    fi
+        image/*)
+            local orientation
+            orientation="$(identify -format '%[EXIF:Orientation]\n' -- "${FILE_PATH}")"
+            ## If orientation data is present and the image actually
+            ## needs rotating ("1" means no rotation)...
+            if [[ -n "$orientation" && "$orientation" != 1 ]]; then
+                ## ...auto-rotate the image according to the EXIF data.
+                convert -- "${FILE_PATH}" -auto-orient "${IMAGE_CACHE_PATH}" && return 6
+            fi
 
-    ## `w3mimgdisplay` will be called for all images (unless overridden
-    ## as above), but might fail for unsupported types.
-    return 7
-    ;;
+            ## `w3mimgdisplay` will be called for all images (unless overridden
+            ## as above), but might fail for unsupported types.
+            return 7
+            ;;
 
-video/*)
-    ffmpeg -i "${FILE_PATH}" -map 0:v -map -0:V -c copy "${IMAGE_CACHE_PATH}" && return 6
-    ffmpegthumbnailer -i "${FILE_PATH}" -o "${IMAGE_CACHE_PATH}" -s 0 && return 6
-    return 1
-    ;;
+        video/*)
+            ffmpeg -i "${FILE_PATH}" -map 0:v -map -0:V -c copy "${IMAGE_CACHE_PATH}" && return 6
+            ffmpegthumbnailer -i "${FILE_PATH}" -o "${IMAGE_CACHE_PATH}" -s 0 && return 6
+            return 1
+            ;;
 
-audio/*)
-    ffmpeg -i "${FILE_PATH}" -map 0:v -map -0:V -c copy \
-        "${IMAGE_CACHE_PATH}" && return 6
+        audio/*)
+            ffmpeg -i "${FILE_PATH}" -map 0:v -map -0:V -c copy \
+                "${IMAGE_CACHE_PATH}" && return 6
             ;;
 
         application/pdf)
@@ -70,64 +70,64 @@ audio/*)
                 -jpeg -tiffcompression jpeg \
                 -- "${FILE_PATH}" "${IMAGE_CACHE_PATH%.*}" &&
                 return 6 || return 1
-                            ;;
+            ;;
 
-                        application/font* | application/*opentype)
-                            preview_png="/tmp/$(basename "${IMAGE_CACHE_PATH%.*}").png"
-                            if fontimage -o "${preview_png}" \
-                                --pixelsize "120" \
-                                --fontname \
-                                --pixelsize "80" \
-                                --text "  ABCDEFGHIJKLMNOPQRSTUVWXYZ  " \
-                                --text "  abcdefghijklmnopqrstuvwxyz  " \
-                                --text "  0123456789.:,;(*!?') ff fl fi ffi ffl  " \
-                                --text "  The quick brown fox jumps over the lazy dog.  " \
-                                "${FILE_PATH}"; then
-                                                            convert -- "${preview_png}" "${IMAGE_CACHE_PATH}" &&
-                                                                rm "${preview_png}" &&
-                                                                return 6
-                                                                                                                        else
-                                                                                                                            return 1
-                            fi
-                            ;;
-                    esac
-                }
+        application/font* | application/*opentype)
+            preview_png="/tmp/$(basename "${IMAGE_CACHE_PATH%.*}").png"
+            if fontimage -o "${preview_png}" \
+                --pixelsize "120" \
+                --fontname \
+                --pixelsize "80" \
+                --text "  ABCDEFGHIJKLMNOPQRSTUVWXYZ  " \
+                --text "  abcdefghijklmnopqrstuvwxyz  " \
+                --text "  0123456789.:,;(*!?') ff fl fi ffi ffl  " \
+                --text "  The quick brown fox jumps over the lazy dog.  " \
+                "${FILE_PATH}"; then
+            convert -- "${preview_png}" "${IMAGE_CACHE_PATH}" &&
+                rm "${preview_png}" &&
+                return 6
+        else
+            return 1
+            fi
+            ;;
+    esac
+}
 
-                hold() {
-                    tput civis >/dev/tty 2>/dev/null # hide cursor
-                    read -n 1 -s -r
-                    # stty raw
-                    # dd bs=1 count=1 &>/dev/null
-                    # stty cooked
-                    tput cnorm >/dev/tty 2>/dev/null # show cursor
-                }
+hold() {
+    tput civis >/dev/tty 2>/dev/null # hide cursor
+    read -n 1 -s -r
+    # stty raw
+    # dd bs=1 count=1 &>/dev/null
+    # stty cooked
+    tput cnorm >/dev/tty 2>/dev/null # show cursor
+}
 
-                draw() {
-                    if [ "$PAGE_MODE" ]; then
-                        WIDTH=${lf_width:=$(tput cols)}
-                        HEIGHT=${lf_height:=$(tput lines)}
-                        X=0
-                        Y=0
-                    fi
-                    if [ -n "$TMUX" ]; then
-                        WIDTH=$((WIDTH - 1))
-                        HEIGHT=$((HEIGHT - 1))
-                    fi
-                    if [ "$PAGE_MODE" ]; then
-                        clear
-                        kitty +kitten icat --stdin no --transfer-mode memory --place "${WIDTH}x${HEIGHT}@${X}x${Y}" "$1" </dev/null >/dev/tty
-                        hold
-                        kitty +kitten icat --clear --stdin no --transfer-mode memory </dev/null >/dev/tty
-                    else
-                        # preview launched in preview mode
-                        kitty +kitten icat --stdin no --transfer-mode memory --place "${WIDTH}x${HEIGHT}@${X}x${Y}" "$1" </dev/null >/dev/tty
-                        exit 1 # needed for the preview to refresh
-                    fi
-                }
+draw() {
+    if [ "$PAGE_MODE" ]; then
+        WIDTH=${lf_width:=$(tput cols)}
+        HEIGHT=${lf_height:=$(tput lines)}
+        X=0
+        Y=0
+    fi
+    if [ -n "$TMUX" ]; then
+        WIDTH=$((WIDTH - 1))
+        HEIGHT=$((HEIGHT - 1))
+    fi
+    if [ "$PAGE_MODE" ]; then
+        clear
+        kitty +kitten icat --stdin no --transfer-mode memory --place "${WIDTH}x${HEIGHT}@${X}x${Y}" "$1" </dev/null >/dev/tty
+        hold
+        kitty +kitten icat --clear --stdin no --transfer-mode memory </dev/null >/dev/tty
+    else
+        # preview launched in preview mode
+        kitty +kitten icat --stdin no --transfer-mode memory --place "${WIDTH}x${HEIGHT}@${X}x${Y}" "$1" </dev/null >/dev/tty
+        exit 1 # needed for the preview to refresh
+    fi
+}
 
-                fallback() {
-                    bat --color=always --style=plain --theme=ansi "$FILE_PATH"
-                }
+fallback() {
+    bat --color=always --style=plain --theme=ansi "$FILE_PATH"
+}
 
 # check if cached file exists, if not, create it
 if [ -f "$IMAGE_CACHE_PATH" ]; then
