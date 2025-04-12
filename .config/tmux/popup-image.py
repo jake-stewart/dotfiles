@@ -6,6 +6,7 @@ import termios
 import tty
 import subprocess
 import shlex
+import io
 from PIL import Image
 
 glyphs = [
@@ -53,12 +54,16 @@ glyphs = [
 def enableTmuxPassthrough():
     os.system("tmux set -p allow-passthrough on")
 
-def kittyGraphics(filename, **kwargs):
+def kittyGraphics(filename=None, data=None, **kwargs):
     buffer = ["\x1b_G"]
     buffer.append(",".join([k + "=" + str(v) for k, v in kwargs.items()]))
-    buffer.append(";")
-    path = base64.b64encode(bytes(filename, encoding="utf-8"))
-    buffer.append(str(path, encoding="ascii"))
+    if filename:
+        buffer.append(";")
+        path = base64.b64encode(bytes(filename, encoding="utf-8"))
+        buffer.append(str(path, encoding="ascii"))
+    if data:
+        buffer.append(";")
+        buffer.append(data)
     buffer.append("\x1b\\")
     return "".join(buffer)
 
@@ -74,7 +79,7 @@ def allocateImageSpace(cols, rows):
             buffer.append("\U0010EEEE")
             buffer.append(glyphs[row])
             buffer.append(glyphs[col])
-        buffer.append("\x1b[39m\n")
+        buffer.append("\x1b[0m\n")
     return "".join(buffer)
 
 def set_terminal():
@@ -93,7 +98,7 @@ def show_mouse_cursor():
 def hide_mouse_cursor():
     os.system("tput civis")
 
-def display():
+def displayPopup():
     hide_mouse_cursor()
 
     size = os.get_terminal_size()
@@ -120,14 +125,11 @@ def gridFitImage(image_width, image_height, max_width, max_height):
     
     return int(grid_width), int(grid_height)
 
-def preparePopup(script, filename):
-    output = str(subprocess.check_output([
-        "tmux", "display", "-p", "#{client_width},#{client_height}"
-    ]), encoding="ascii")
-
-    client_width, client_height = [int(n) for n in output.split(",")]
-
+def prepareImage(filename, client_width, client_height):
     image = Image.open(filename)
+
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
 
     max_width = min(200, client_width)
     max_height = min(50, client_height)
@@ -136,38 +138,37 @@ def preparePopup(script, filename):
             image.width, image.height, max_width, max_height)
 
     enableTmuxPassthrough()
-    cmd = kittyGraphics(filename, f=100, q=2, U=1, i=70, a="T", c=grid_width-3, r=grid_height, t="f")
+
+    b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+    cmd = kittyGraphics(data=b64, f=100, q=2, U=1, i=70, a="T", c=grid_width-3, r=grid_height)
+    return cmd, grid_width, grid_height
+
+def preparePopup(script, filename):
+    output = str(subprocess.check_output([
+        "tmux", "display", "-p", "#{client_width},#{client_height}"
+    ]), encoding="ascii")
+
+    client_width, client_height = [int(n) for n in output.split(",")]
+    cmd, grid_width, grid_height = prepareImage(filename, client_width, client_height)
+
     print(tmuxPassthrough(cmd), end="")
+
     subprocess.Popen([
         "tmux", "display-popup",
         "-w", str(grid_width),
         "-h", str(grid_height),
         "-E",
-        shlex.quote(script) + " display"
+        shlex.quote(script) + " display-popup"
     ])
-
-def preparePane(filename):
-    output = str(subprocess.check_output([
-        "tmux", "display", "-p", "#{pane_width},#{pane_height}"
-    ]), encoding="ascii")
-
-    pane_width, pane_height = [int(n) for n in output.split(",")]
-
-    image = Image.open(filename)
-    grid_width, grid_height = gridFitImage(
-            image.width, image.height, pane_width, pane_height)
-
-    enableTmuxPassthrough()
-    cmd = kittyGraphics(filename, f=100, q=2, U=1, i=70, a="T", c=grid_width, r=grid_height, t="f")
-    print(tmuxPassthrough(cmd), end="")
 
 if __name__ == "__main__":
     if sys.argv[1] == "popup":
         preparePopup(os.path.abspath(sys.argv[0]),
             os.path.abspath(sys.argv[2]))
-    if sys.argv[1] == "print":
-        print(allocateImageSpace(20, 10), end="")
-    if sys.argv[1] == "pane":
-        preparePane(os.path.abspath(sys.argv[2]))
-    elif sys.argv[1] == "display":
-        display()
+    elif sys.argv[1] == "display-popup":
+        displayPopup()
+    elif sys.argv[1] == "preview":
+        filename, width, height, x, y = sys.argv[2:]
+        cmd, grid_width, grid_height = prepareImage(filename, int(width), int(height))
+        print(tmuxPassthrough(cmd), file=sys.stderr, end="")
+        print(allocateImageSpace(grid_width, grid_height), end="")
