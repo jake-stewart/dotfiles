@@ -1,56 +1,80 @@
-require("config")
-
-local function tabStopMove(direction)
-    local tabstop = vim.o.softtabstop
-    local indent = vim.fn.indent(".")
-    local line = vim.fn.getline(".")
-    local cnum = vim.fn.col(".")
-    local key = vim.api.nvim_replace_termcodes(
-        direction == -1 and "<left>" or "<right>", true, true, true)
-    local total = 0
-    local offset = math.min(direction, 0)
-    for _ = 1, vim.v.count1 do
-        local ncol = 1
-        if (cnum + offset) <= indent and line:sub(cnum + offset, cnum + offset) == " " then
-            if direction == -1 then
-                ncol = ((cnum - 1) % tabstop)
-                if ncol == 0 then
-                    ncol = 4
-                end
-            else
-                ncol = tabstop - ((cnum - 1) % tabstop)
-            end
-        end
-        total = total + ncol
-        cnum = cnum + ncol * direction
-        if cnum <= 1 then
-            total = total + math.min(cnum, 0)
-            break
-        end
-    end
-    if total > 0 then
-        local mode = vim.fn.mode()
-        if mode == "i" or mode == "R" then
-            return string.rep(key, total)
-        else
-            return total .. key
-        end
-    end
-    return ""
+local function echo(message, hl)
+    vim.api.nvim_echo({{ message, hl or "Normal" }}, true, {})
 end
 
--- for _, item in ipairs({
---     { direction = -1, key = "<left>" },
---     { direction = 1, key = "<right>" }
--- }) do
---     vim.keymap.set(
---         {"n", "o", "x", "i"},
---         item.key,
---         function()
---             return tabStopMove(item.direction)
---         end,
---         { expr = true, replace_keycodes = false }
---     )
--- end
+local function bootstrap(author, name, opts)
+    opts = opts or {}
+    local path = opts.dir or (
+        vim.fn.stdpath("data") .. "/" .. name .. "/" .. name .. ".nvim"
+    )
+    if not vim.uv.fs_stat(path) then
+        local repo = "https://github.com/" .. author .. "/" .. name .. ".nvim"
+        local out = vim.fn.system({
+            "git",
+            "clone",
+            "--branch=" .. (opts.branch or "stable"),
+            "--filter=blob:none",
+            repo,
+            path
+        })
+        if vim.v.shell_error ~= 0 then
+            echo("Failed to clone " .. name .. ":", "Error")
+            echo(out)
+            vim.fn.getchar()
+            os.exit(1)
+        end
+    end
+    vim.opt.runtimepath:prepend(path)
+end
 
+bootstrap("jake-stewart", "lazier", {
+    -- dir = "/Users/jakey/clones/lazier.nvim"
+})
+bootstrap("folke", "lazy")
 
+require("lazier").setup("config.plugins", {
+    lazier = {
+        before = function()
+            vim.loader.enable()
+            require "config.options"
+            require "config.autocommands"
+            require "config.colors"
+        end,
+        after = function()
+            require "config.ignore"
+            require "config.mappings"
+            require "config.undo"
+        end,
+        detect_changes = false,
+        start_lazily = function()
+            local fname = vim.fn.expand("%")
+            return fname == ""
+                or vim.fn.isdirectory(fname) == 0
+                and not ({
+                    zip = true,
+                    tar = true,
+                    gz = true,
+                    md = true
+                })[vim.fn.fnamemodify(fname, ":e")]
+        end
+    },
+    install = {
+        colorscheme = { "custom" }
+    },
+    defaults = { lazy = true },
+    change_detection = {
+        enabled = false,
+        notify = false
+    },
+    performance = {
+        cache = { enabled = true },
+        reset_packpath = true,
+        rtp = {
+            reset = false,
+            disabled_plugins = {
+                "tohtml",
+                "tutor",
+            }
+        }
+    }
+})
