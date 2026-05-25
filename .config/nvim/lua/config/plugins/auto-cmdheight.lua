@@ -1,7 +1,8 @@
 return {
     "jake-stewart/auto-cmdheight.nvim",
     dir = "~/clones/auto-cmdheight.nvim",
-    lazy = false,
+    enabled = true,
+    event = "VeryLazy",
     priority = 1000,
     config = function()
         require("auto-cmdheight").setup({

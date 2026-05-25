@@ -2,3 +2,12 @@
 
 cp "$HOME/.config/kitty/colors/$1" ~/.cache/active_theme
 
+# if [ -x "$HOME/.local/bin/overridable-task.sh" ]; then
+#     [ "$1" = "dark" ] && DARK=true || DARK=false
+#     "$HOME/.local/bin/overridable-task.sh" terminal-theme 0.5 osascript -e \
+#         "tell application \"System Events\" to tell appearance preferences to set dark mode to $DARK"
+# fi
+
+[ "$1" = "dark" ] && DARK=true || DARK=false
+osascript -e \
+    "tell application \"System Events\" to tell appearance preferences to set dark mode to $DARK"

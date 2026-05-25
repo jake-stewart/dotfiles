@@ -1,4 +1,4 @@
-return require "lazier" {
+return {
     "machakann/vim-swap",
     config = function()
         vim.keymap.set("n", "gs", "<plug>(swap-interactive)")

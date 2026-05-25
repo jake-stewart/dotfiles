@@ -1,8 +1,8 @@
 
-return require "lazier" {
+return {
     "Saghen/blink.cmp",
     event = "VeryLazy",
-    -- enabled = false,
+    enabled = false,
     build = "cargo build --release",
     opts = {
         signature = {
@@ -10,6 +10,9 @@ return require "lazier" {
             window = {
                 show_documentation = true
             }
+        },
+        cmdline = {
+            enabled = false,
         },
 
         fuzzy = {

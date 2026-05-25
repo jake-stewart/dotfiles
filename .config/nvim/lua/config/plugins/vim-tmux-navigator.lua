@@ -1,24 +1,25 @@
-return require "lazier" {
+return {
     "christoomey/vim-tmux-navigator",
-    config = function()
+    init = function()
         vim.g.tmux_navigator_no_mappings = 1
-
-        local function bind(keys, callback)
-            vim.keymap.set({"n", "v", "i"}, keys, function()
-                if package.loaded["multicursor-nvim"] then
-                    local success, mc = pcall(require, "multicursor-nvim")
-                    if success then
-                        mc.action(function()  end)
-                    end
+    end,
+    config = function()
+        local keys = {
+            ["<m-h>"] = vim.cmd.TmuxNavigateLeft,
+            ["<m-j>"] = vim.cmd.TmuxNavigateDown,
+            ["<m-k>"] = vim.cmd.TmuxNavigateUp,
+            ["<m-l>"] = vim.cmd.TmuxNavigateRight,
+        }
+        for key, callback in pairs(keys) do
+            vim.keymap.set({"n", "v", "i"}, key, function()
+                local mc = package.loaded["multicursor-nvim"]
+                if mc then
+                    mc.action(function() callback() end)
+                else
+                    callback()
                 end
-                callback()
             end)
         end
-
-        bind("<m-h>", vim.cmd.TmuxNavigateLeft)
-        bind("<m-j>", vim.cmd.TmuxNavigateDown)
-        bind("<m-k>", vim.cmd.TmuxNavigateUp)
-        bind("<m-l>", vim.cmd.TmuxNavigateRight)
     end
 }
 

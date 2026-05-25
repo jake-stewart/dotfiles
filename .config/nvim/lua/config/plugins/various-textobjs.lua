@@ -1,4 +1,4 @@
-return require "lazier" {
+return {
     "chrisgrieser/nvim-various-textobjs",
     enabled = false,
     event = "VeryLazy",

@@ -68,3 +68,30 @@ zle() {
     builtin zle "$@"
 }
 
+array-filter() {
+    local _tmp_array=()
+    for item in "${(P)1[@]}"; do
+        if eval "$2"; then
+            _tmp_array+=("$item")
+        fi
+    done
+    eval "$1"'=("${_tmp_array[@]}")'
+}
+
+array-map() {
+    local _tmp_array=()
+    for item in "${(P)1[@]}"; do
+        _tmp_array+=("$(eval "$2")")
+    done
+    eval "$1"'=("${_tmp_array[@]}")'
+}
+
+array-remove() {
+    local _tmp_array=()
+    for item in "${(P)1[@]}"; do
+        if [ "$item" != "$2" ]; then
+            _tmp_array+=("$item")
+        fi
+    done
+    eval "$1"'=("${_tmp_array[@]}")'
+}

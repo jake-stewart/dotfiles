@@ -38,7 +38,7 @@ function log.success(message, history)
     if history == nil then
         history = true
     end
-    vim.api.nvim_echo({{ message, "DiffAdd" }}, history, {})
+    vim.api.nvim_echo({{ message, "Success" }}, history, {})
 end
 
 return log

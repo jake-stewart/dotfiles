@@ -97,3 +97,30 @@ group:au({
         )
     end
 })
+
+
+local cursorline = vim.o.cursorline
+
+local function in_visual_mode()
+    local mode = vim.fn.mode()
+    return mode == "v"
+        or mode == "V"
+        or mode == "\x16"
+        or mode == "s"
+        or mode == "S"
+        or mode == "\x13"
+end
+
+group:au({
+    event = "ModeChanged",
+    callback = function()
+        if in_visual_mode() then
+            cursorline = vim.o.cursorline
+            vim.o.cursorline = false
+        elseif cursorline then
+            vim.o.cursorline = true
+        else
+            cursorline = vim.o.cursorline
+        end
+    end
+})

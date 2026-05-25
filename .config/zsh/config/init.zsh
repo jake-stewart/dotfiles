@@ -13,13 +13,13 @@ source "$ZDOTDIR/config/prompt.zsh"
 
 function lazy-load() {
     function on-lazy-load() {
-        shift -p init_functions
+        array-remove init_functions on-lazy-load
         source "$ZDOTDIR/config/config.zsh"
-        skip-postcmd
-        trigger-precmd
         trigger-zle-line-init
     }
     init_functions+=(on-lazy-load)
+    skip-postcmd
+    trigger-precmd
 }
 
 lazy-load

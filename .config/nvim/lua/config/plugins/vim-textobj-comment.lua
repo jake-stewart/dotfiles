@@ -1,4 +1,4 @@
-return require "lazier" {
+return {
     "glts/vim-textobj-comment",
     dependencies = { "kana/vim-textobj-user" },
     keys = {

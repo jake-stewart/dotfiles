@@ -1,4 +1,6 @@
-return require "lazier" {
+require "sanity"
+
+return {
     "jake-stewart/vmark.nvim",
     dir = "~/clones/vmark.nvim",
     event = "VeryLazy",
@@ -26,7 +28,7 @@ return require "lazier" {
 
         local searchHl = vim.api.nvim_get_hl(0, { name = "Search", link = false })
         local infoHl = vim.api.nvim_get_hl(0, { name = "DiagnosticInfo", link = false })
-        vim.api.nvim_set_hl(0, "VMark", table._spread(searchHl, infoHl, { cterm = { bold = true }}))
-        vim.api.nvim_set_hl(0, "VMarkSign", table._spread(infoHl, { cterm = { bold = true }}))
+        vim.api.nvim_set_hl(0, "VMark", array.spread(searchHl, infoHl, { cterm = { bold = true }}))
+        vim.api.nvim_set_hl(0, "VMarkSign", array.spread(infoHl, { cterm = { bold = true }}))
     end
 }

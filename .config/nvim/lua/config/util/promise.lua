@@ -1,74 +1,148 @@
-require "sanity"
+--- @generic T
+--- @class Promise<T>
+local Promise = {}
+Promise.__index = Promise
 
-local PromiseMetatable = {}
-PromiseMetatable.__index = PromiseMetatable
+local new, handle, resolve, reject
 
-function PromiseMetatable:success(callback)
-    if self.state == "pending" then
-        self.callbacks:_push(callback)
-    elseif self.state == "fulfilled" then
-        callback(self.value)
-    end
-    return self
+--- @generic Y
+--- @param callback fun(T): Y | nil
+--- @return Promise<Y>
+function Promise:success(callback)
+    local p = new()
+    handle(self, { success = callback, next = p })
+    return p
 end
 
-function PromiseMetatable:error(callback)
-    if self.state == "rejected" then
-        callback(self.value)
+--- @return Promise
+function Promise:error(callback)
+    local p = new()
+    handle(self, { error = callback, next = p })
+    return p
+end
+
+--- @return Promise
+function Promise:finally(callback)
+    local p = new()
+    handle(self, { finally = callback, next = p })
+    return p
+end
+
+local function is_promise(v)
+    return type(v) == "table" and getmetatable(v) == Promise
+end
+
+new = function()
+    return setmetatable({
+        state = "pending",
+        value = nil,
+        queue = {},
+    }, Promise)
+end
+
+handle = function(promise, handler)
+    if promise.state == "pending" then
+        table.insert(promise.queue, handler)
+        return
+    end
+
+    if handler.finally then
+        local ok, result = pcall(handler.finally)
+        if not ok then
+            reject(handler.next, result)
+        elseif is_promise(result) then
+            result
+                :success(function()
+                    if promise.state == "fulfilled" then
+                        resolve(handler.next, promise.value)
+                    else
+                        reject(handler.next, promise.value)
+                    end
+                end)
+                :error(function(r)
+                    reject(handler.next, r)
+                end)
+        else
+            if promise.state == "fulfilled" then
+                resolve(handler.next, promise.value)
+            else
+                reject(handler.next, promise.value)
+            end
+        end
+        return
+    end
+
+    local callback
+    if promise.state == "fulfilled" then
+        callback = handler.success
     else
-        self.errorCallbacks:_push(callback)
+        callback = handler.error
     end
-    return self
-end
 
-function PromiseMetatable:finally(callback)
-    if self.state ~= "pending" then
-        callback()
-    end
-    self.finallyCallbacks:_push(callback)
-    return self
-end
-
-local function Promise(executor)
-    local promise = setmetatable({}, PromiseMetatable)
-    promise.callbacks = table {}
-    promise.errorCallbacks = table {}
-    promise.finallyCallbacks = table {}
-    promise.state = "pending"
-    promise.value = nil
-
-    local function resolve(value)
-        if promise.state == "pending" then
-            promise.state = "fulfilled"
-            promise.value = value
-            for _, callback in promise.callbacks do
-                callback(value)
-            end
-            for _, callback in promise.finallyCallbacks do
-                callback()
-            end
+    if not callback then
+        if promise.state == "fulfilled" then
+            resolve(handler.next, promise.value)
+        else
+            reject(handler.next, promise.value)
         end
+        return
     end
 
-    local function reject(reason)
-        if promise.state == "pending" then
-            promise.state = "rejected"
-            promise.value = reason
-            for _, callback in promise.errorCallbacks do
-                callback(reason)
-            end
-            for _, callback in promise.finallyCallbacks do
-                callback()
-            end
-        end
+    local ok, result = pcall(callback, promise.value)
+    if not ok then
+        reject(handler.next, result)
+    else
+        resolve(handler.next, result)
     end
-
-    local success, err = pcall(executor, resolve, reject)
-    if not success then
-        reject(err)
-    end
-
-    return promise
 end
 
-return Promise
+resolve = function(promise, value)
+    if promise.state ~= "pending" then
+        return
+    end
+    if value == promise then
+        return reject(promise, "cannot resolve promise with itself")
+    end
+    if is_promise(value) then
+        value
+            :success(function(v)
+                resolve(promise, v)
+            end)
+            :error(function(r)
+                reject(promise, r)
+            end)
+        return
+    end
+    promise.state = "fulfilled"
+    promise.value = value
+    for _, h in ipairs(promise.queue) do
+        handle(promise, h)
+    end
+    promise.queue = {}
+end
+
+reject = function(promise, reason)
+    if promise.state ~= "pending" then
+        return
+    end
+    promise.state = "rejected"
+    promise.value = reason
+    for _, h in ipairs(promise.queue) do
+        handle(promise, h)
+    end
+    promise.queue = {}
+end
+
+--- @return Promise
+return function(executor)
+    local p = new()
+    executor(
+        vim.schedule_wrap(function(value)
+            resolve(p, value)
+        end),
+        vim.schedule_wrap(function(reason)
+            reject(p, reason)
+        end)
+    )
+    return p
+end

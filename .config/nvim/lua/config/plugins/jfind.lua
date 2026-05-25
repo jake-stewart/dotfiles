@@ -1,6 +1,6 @@
 require "sanity"
 
-return require "lazier" {
+return {
     "jake-stewart/jfind.nvim",
     dir = "~/clones/jfind.nvim",
     branch = "2.0",
@@ -22,6 +22,8 @@ return require "lazier" {
                 ".class",
                 "__pycache__",
                 "node_modules",
+                "assets",
+                "lib",
                 "target",
                 "build",
                 "tmp",
@@ -35,12 +37,12 @@ return require "lazier" {
             tmux = true
         })
 
-        local preview = table({
+        local preview = array({
             "bat",
             "--color", "always",
             "--theme", "ansi",
             "--style", "plain",
-        }):_join(" ")
+        }):join(" ")
 
         local function filePicker(query)
             jfind.findFile({
@@ -94,11 +96,11 @@ return require "lazier" {
         end
 
         local function bufferPicker()
-            local input = table(vim.api.nvim_list_bufs())
-                :_filter(function(buf)
+            local input = array(vim.api.nvim_list_bufs())
+                :filter(function(buf)
                     return vim.api.nvim_buf_is_loaded(buf)
                 end)
-                :_map(function(buf)
+                :map(function(buf)
                     local name = vim.api.nvim_buf_get_name(buf) or ""
                     local displayName = name == ""
                         and "[No Name]"
@@ -106,7 +108,7 @@ return require "lazier" {
                     local hint = buf .. " " .. name
                     return { displayName, hint }
                 end)
-                :_flat()
+                :flat()
 
             jfind.jfind({
                 input = input,
@@ -122,7 +124,7 @@ return require "lazier" {
                 queryPosition = "top",
                 hidden = true,
                 callbackWrapper = function(callback, item, query)
-                    callback(item:_split(" ")[1], query)
+                    callback(item:split(" ")[1], query)
                 end,
                 callback = {
                     [key.ESCAPE] = function() end,
@@ -157,9 +159,9 @@ return require "lazier" {
                 selectAll = true,
                 callback = {
                     [key.DEFAULT] = function(results)
-                        results = table(results)
-                            :_map(function(result)
-                                result = table(result)
+                        results = array(results)
+                            :map(function(result)
+                                result = array(result)
                                 return {
                                     filename = result[1],
                                     lnum = result[2],
@@ -175,7 +177,7 @@ return require "lazier" {
         end
 
         vim.keymap.set("n", "<c-f>", filePicker)
-        vim.keymap.set("c", "<c-f>", cmdFilePicker)
+        -- vim.keymap.set("c", "<c-f>", cmdFilePicker)
         vim.keymap.set("n", "<c-b>", bufferPicker)
         vim.keymap.set("n", "<leader><c-f>", liveGrepPicker)
         vim.keymap.set("n", "<leader><c-a>", liveGrepQfListPicker)

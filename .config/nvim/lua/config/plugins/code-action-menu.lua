@@ -1,4 +1,4 @@
-return require "lazier" {
+return {
     "weilbith/nvim-code-action-menu",
     config = function()
         vim.keymap.set("n", "<leader>f", vim.cmd.CodeActionMenu)

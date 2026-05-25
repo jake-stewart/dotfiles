@@ -1,4 +1,4 @@
-return require "lazier" {
+return {
     "delphinus/vim-firestore",
     enabled = false,
     ft = "firestore",

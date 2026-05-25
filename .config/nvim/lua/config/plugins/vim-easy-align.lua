@@ -1,4 +1,4 @@
-return require "lazier" {
+return {
     "junegunn/vim-easy-align",
     enabled = false,
     config = function()

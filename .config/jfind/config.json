@@ -8,7 +8,7 @@
     "wrap_item_list": false,
     "style": {
         "active_item": {
-            "fg": "bright_white",
+            "fg": "white",
             "bg": 233,
             "attr": ["bold"]
         },
@@ -28,7 +28,7 @@
             "bg": 233
         },
         "active_hint": {
-            "fg": "bright_white",
+            "fg": "white",
             "bg": 233
         }
     }

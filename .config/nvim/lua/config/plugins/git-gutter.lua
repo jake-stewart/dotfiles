@@ -1,4 +1,6 @@
-return require "lazier" {
+require "sanity"
+
+return {
     "lewis6991/gitsigns.nvim",
     config = function()
         local state = {
@@ -61,7 +63,7 @@ return require "lazier" {
             vim.api.nvim_echo(
                 {{
                     "Git signs " .. (state.signs_enabled and "enabled" or "disabled"),
-                    state.signs_enabled and "DiffAdd" or "DiffDelete"
+                    state.signs_enabled and "Success" or "Error"
                 }}, false, {})
         end)
         vim.keymap.set("n", "<leader>go", gs.setqflist)
@@ -79,9 +81,9 @@ return require "lazier" {
             local paths = vim.v.shell_error == 0
                 and vim.fn.systemlist("git diff --name-only")
                 or {}
-            table(paths)
-                :_map(function(item) return { filename = topLevel .. "/" .. item } end)
-                :_pipe(vim.fn.setqflist)
+            array(paths)
+                :map(function(item) return { filename = topLevel .. "/" .. item } end)
+                :pipe(vim.fn.setqflist)
             vim.cmd.copen()
         end)
     end

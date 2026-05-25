@@ -1,4 +1,4 @@
-return require "lazier" {
+return {
     "nvim-treesitter/nvim-treesitter-context",
     config = function()
         local tsc = require("treesitter-context")
@@ -8,7 +8,7 @@ return require "lazier" {
             max_lines = 0,
             min_window_height = 0,
             line_numbers = true,
-            multiline_threshold = 20,
+            multiline_threshold = 1,
             trim_scope = 'outer',
             -- mode = 'cursor',
             mode = 'topline',
@@ -16,7 +16,9 @@ return require "lazier" {
             zindex = 20,
             on_attach = nil,
         })
-        vim.keymap.set("n", "<leader>tc", vim.cmd.TSContextToggle)
+        vim.keymap.set("n", "<leader>tc", function()
+            vim.cmd.TSContext("toggle")
+        end)
         vim.api.nvim_set_hl(0, "TreesitterContext", { link = "Normal" })
         vim.api.nvim_set_hl(0, "TreesitterContextSeparator", { link = "Comment" })
     end

@@ -1,9 +1,16 @@
-return require "lazier" {
+-- local TEST_MULTICURSOR = vim.fn.environ().TEST_MULTICURSOR
+
+return {
     "jake-stewart/multicursor.nvim",
+    -- dir = TEST_MULTICURSOR and "~/clones/multicursor.nvim" or nil,
     dir = "~/clones/multicursor.nvim",
+    -- enabled = false,
+
     config = function()
         local mc = require("multicursor-nvim")
-        mc.setup()
+        mc.setup({ hlsearch = true })
+
+        mc.onModeChanged(function(cursor, oldMode, newMode) end)
 
         mc.addKeymapLayer(function(set)
             set({"n", "v"}, "H", function() mc.swapCursors(-1) end)
@@ -51,8 +58,8 @@ return require "lazier" {
         -- -- map("v", "M", mc.textObjects())
         map({"n", "x"}, "<leader>M", mc.operator)
 
-        -- map("v", "<leader>t", mc.transposeCursors(1))
-        -- map("v", "<leader>T", mc.transposeCursors(-1))
+        map("v", "<leader>t", function() mc.transposeCursors(1) end)
+        map("v", "<leader>T", function() mc.transposeCursors(-1) end)
         map("v", "I", mc.insertVisual)
         map("v", "A", mc.appendVisual)
         map("v", "<leader><esc>", mc.visualToCursors)
@@ -66,10 +73,15 @@ return require "lazier" {
             end)
         end)
 
-        -- vim.api.nvim_set_hl(0, "MultiCursorCursor", { ctermbg = 250, ctermfg = "black" })
-        -- vim.api.nvim_set_hl(0, "MultiCursorVisual", { link = "Visual" })
-        -- vim.api.nvim_set_hl(0, "MultiCursorDisabledCursor", { ctermbg = 240, ctermfg = "white" })
+        vim.api.nvim_set_hl(0, "MultiCursorCursor", { ctermbg = nil, ctermfg = 250, reverse = true })
+        vim.api.nvim_set_hl(0, "MultiCursorVisual", { link = "Visual" })
+        vim.api.nvim_set_hl(0, "MultiCursorDisabledCursor", { ctermbg = 248, ctermfg = 238, reverse = true })
         -- vim.api.nvim_set_hl(0, "MultiCursorDisabledVisual", { link = "Visual" })
-        -- vim.api.nvim_set_hl(0, "MultiCursorMainSign", { link = "CursorLineSign" })
+        vim.api.nvim_set_hl(0, "MultiCursorDisabledVisual", { link = "Search" })
+
+        -- map("n", "<leader>qc", function ()
+        --     vim.cmd[[cdo lua require("multicursor-nvim").addCursor()]]
+        --     mc.deleteCursor()
+        -- end)
     end,
 }

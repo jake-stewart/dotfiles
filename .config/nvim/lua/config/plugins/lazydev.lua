@@ -1,4 +1,4 @@
-return require "lazier" {
+return {
     "folke/lazydev.nvim",
     ft = "lua",
     opts = {

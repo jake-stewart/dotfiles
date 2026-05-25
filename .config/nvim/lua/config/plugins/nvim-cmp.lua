@@ -41,9 +41,9 @@ local WINHIGHLIGHT = vim.iter({
     :map(function(k, v) return k .. ":" .. v end)
     :join(",")
 
-return require "lazier" {
+return {
     "hrsh7th/nvim-cmp",
-    enabled = false,
+    enabled = true,
     dependencies = {
         "hrsh7th/cmp-nvim-lsp",
         "hrsh7th/cmp-buffer",
@@ -51,9 +51,18 @@ return require "lazier" {
         "hrsh7th/cmp-cmdline",
         "hrsh7th/cmp-nvim-lsp-signature-help"
     },
-    event = "InsertEnter",
+    -- event = "InsertEnter",
     config = function()
         local cmp = require("cmp")
+
+        vim.api.nvim_set_hl(0, "CmpItemKindText", { link = "GreyFg2" })
+        vim.api.nvim_set_hl(0, "CmpItemMenu", { link = "GreyFg2" })
+        vim.api.nvim_set_hl(0, "", { link = "GreyFg3",  })
+        vim.api.nvim_set_hl(0, "CmpItemAbbrDeprecated", {
+            cterm = { strikethrough = true }, --- @diagnostic disable-line
+            bg = vim.api.nvim_get_hl(0, { name = "GreyBg3" }).bg
+        })
+
         cmp.setup({
             mapping = cmp.mapping.preset.insert({
                 ["<up>"] = cmp.mapping.confirm({

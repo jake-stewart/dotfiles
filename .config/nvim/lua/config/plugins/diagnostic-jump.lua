@@ -1,11 +1,11 @@
-return require "lazier" {
+return {
     "jake-stewart/diagnostic-jump.nvim",
     config = function()
         local diagnosticJump = require("diagnostic-jump")
         diagnosticJump.setup({
             float = {
                 format = function(diagnostic)
-                    return diagnostic.message:_split("\n")[1]
+                    return diagnostic.message:split("\n")[1]
                 end,
                 prefix = "",
                 suffix = "",

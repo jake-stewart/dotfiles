@@ -2,7 +2,7 @@ require "sanity"
 
 local C_STYLE_COMMENT = "//\\ %s"
 
-local SERVER_CONFIGURATIONS = table({
+local SERVER_CONFIGURATIONS = {
     clangd = {
         filetypes = { "cpp", "c" },
         commentstring = C_STYLE_COMMENT,
@@ -10,6 +10,12 @@ local SERVER_CONFIGURATIONS = table({
     zls = {
         filetypes = { "zig" },
         commentstring = C_STYLE_COMMENT,
+        settings = {
+            zls = {
+                enable_build_on_save = true,
+                build_on_save_step = "check",
+            }
+        }
     },
     jdtls = {
         filetypes = { "java" },
@@ -34,10 +40,10 @@ local SERVER_CONFIGURATIONS = table({
                 end
                 args.targetUri = input
                 vim.lsp.util.rename(args.sourceUri, args.targetUri)
-                vim.lsp.buf.execute_command({
+                vim.lsp.client:exec_cmd({
                     command = "_typescript.applyRenameFile",
-                    arguments = {args},
-                    title = "",
+                    arguments = { args },
+                    title = ""
                 })
             end)
         end
@@ -51,7 +57,7 @@ local SERVER_CONFIGURATIONS = table({
             includeInlayVariableTypeHints = false
         }
         return {
-            filetypes = { "typescript" },
+            filetypes = { "typescript", "javascript", "typescriptreact" },
             settings = {
                 typescript = {
                     inlayHints = inlayHints
@@ -103,27 +109,40 @@ local SERVER_CONFIGURATIONS = table({
             ROOT .. "/node_modules/@angular/language-server",
         }
         return {
-            filetypes = { "typescript", "html" },
+            filetypes = { "typescript", "htmlangular" },
             cmd = cmd,
             on_new_config = function(new_config)
                 new_config.cmd = cmd
             end
         }
     end
-})
-    :_map(function(config)
-        if type(config) == "function" then
-            return config()
-        end
-        return config
-    end)
+}
+SERVER_CONFIGURATIONS = vim.tbl_map(function(v)
+    if type(v) == "function" then
+        return v()
+    end
+    return v
+end, SERVER_CONFIGURATIONS)
 
 local MAPPINGS = {
     ["gD"] = vim.lsp.buf.declaration,
-    ["gd"] = vim.lsp.buf.definition,
+    ["gd"] = function()
+        pcall(function() require("waymark")() end)
+        vim.lsp.buf.definition()
+    end,
     ["gy"] = vim.lsp.buf.type_definition,
     ["K"] = vim.lsp.buf.hover,
-    ["<leader>r"] = vim.lsp.buf.rename,
+    ["<leader>r"] = function()
+        local opts = {
+            prompt = "rename: ",
+            default = vim.fn.expand("<cword>"),
+        }
+        vim.ui.input(opts, function(result)
+            if result and #result > 0 then
+                vim.lsp.buf.rename(result)
+            end
+        end)
+    end,
     ["<c-r>"] = vim.cmd.LspRestart,
     ["<leader>ca"] = vim.lsp.buf.code_action,
     ["g<up>"] = function()
@@ -133,29 +152,28 @@ local MAPPINGS = {
         local line = vim.fn.line(".")
         vim.lsp.buf.references(nil, {
             on_list = function(qflist)
-                table(qflist.items)
-                    :_filter(function(item)
+                array(qflist.items)
+                    :filter(function(item)
                         return item.lnum ~= line
                     end)
-                    :_pipe(vim.fn.setqflist)
+                    :pipe(vim.fn.setqflist)
                 vim.cmd.copen()
             end
         })
     end,
 }
 
-return require "lazier" {
-    "neovim/nvim-lspconfig",
-    ft = SERVER_CONFIGURATIONS
-        :_map(function(config) return config.filetypes end)
-        :_flat()
-        :_uniq(),
-    config = function()
-        local lspconfig = require("lspconfig")
 
+return {
+    "neovim/nvim-lspconfig",
+    ft = array(vim.tbl_values(SERVER_CONFIGURATIONS))
+        :map(function(config) return config.filetypes end)
+        :flat()
+        :uniq(),
+    config = function()
         local function onAttach(client, bufnr, opts)
             client.server_capabilities.semanticTokensProvider = nil
-            table(MAPPINGS):_each(function(v, k)
+            array(MAPPINGS):each(function(v, k)
                 vim.keymap.set("n", k, v, {
                     remap = false,
                     silent = true,
@@ -176,13 +194,18 @@ return require "lazier" {
 
         local defaultOpts = {
             capabilities = {},
-            inlay_hints = {enabled = true},
             on_attach = onAttach,
-            init_options = {preferences = {disableSuggestions = true}},
+            init_options = {
+                preferences = {
+                    disableSuggestions = true,
+                },
+            },
         }
 
-        SERVER_CONFIGURATIONS:_each(function(opts, k)
-            lspconfig[k].setup(table._spread(opts, defaultOpts))
+        array(vim.tbl_keys(SERVER_CONFIGURATIONS)):each(function(k)
+            opts = SERVER_CONFIGURATIONS[k]
+            vim.lsp.config(k, array.spread(opts, defaultOpts))
+            vim.lsp.enable(k)
         end)
     end
 }

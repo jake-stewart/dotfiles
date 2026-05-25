@@ -1,4 +1,4 @@
-return require "lazier" {
+return {
     "jake-stewart/force-cul.nvim",
     dir = "~/clones/force-cul.nvim",
     opts = {},

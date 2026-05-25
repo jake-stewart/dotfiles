@@ -27,6 +27,8 @@ TIMEFMT=$'\n'"%J  %U user %*Es total %P cpu %M $MAX_MEMORY_UNITS mem"
 # vi bindings
 bindkey -v
 
+zle_highlight=( region:bg=235 )
+
 # vi cursor shape
 zle -N zle-keymap-select
 zle-keymap-select() {
@@ -74,7 +76,7 @@ previous-prompt() {
     fi
 }
 zle -N previous-prompt
-bind '\e[A' previous-prompt
+# bind '\e[A' previous-prompt
 
 # make : act like opening commandline mode
 commandline-mode() {
@@ -86,13 +88,24 @@ bindkey -M vicmd ":" commandline-mode
 
 # the '-' is supposed to mimic '_' in vim
 # however it is bugged for the first column
-line-text-object() {
-  MARK=0
-  CURSOR=$#BUFFER
-  REGION_ACTIVE=1
+select-line() {
+  local start end
+  start=$CURSOR
+  while (( start >= 0 )) && [[ $BUFFER[$start] != $'\n' ]]; do
+    (( start-- ))
+  done
+  end=$(( $CURSOR + 1 ))
+  while (( end < ${#BUFFER} )) && [[ $BUFFER[$end] != $'\n' ]]; do
+    (( end++ ))
+  done
+  REGION_ACTIVE=2
+  MARK=$((end))
+  CURSOR=$((start - 1))
 }
-zle -N line-text-object
-bindkey -M viopp "l" line-text-object
+zle -N select-line
+bindkey -M viopp l select-line
+# bindkey -M viopp -s l -
+# bindkey -M vicmd -s dl dd
 
 autoload -U select-quoted
 zle -N select-quoted
@@ -109,17 +122,6 @@ for m in visual viopp; do
         bindkey -M $m $c select-bracketed
     done
 done
-
-wrap-sub-shell() {
-    while [[ "$BUFFER" = "" ]]; do
-        zle up-history
-    done
-    BUFFER=" \$($BUFFER)"
-    zle beginning-of-line
-    set-keymap main
-}
-zle -N wrap-sub-shell
-bindkey -M vicmd "$" wrap-sub-shell
 
 # }}}
 # VI INCREMENT {{{
@@ -164,21 +166,62 @@ bindkey -M vicmd `ctrl x` vi-decrement
 
 source "$ZDOTDIR/plugins/zsh-system-clipboard/zsh-system-clipboard.zsh"
 source "$ZDOTDIR/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+source "$ZDOTDIR/config/extract.zsh"
 
 # }}}
 # ZSH SYSTEM CLIPBOARD SETTINGS {{{
 
-# if buffer is empty then strip newlines from paste
-smart-paste() {
-    if [[ "$BUFFER" = "" ]]; then
-        zle zsh-system-clipboard-vicmd-vi-put-before
-        BUFFER="$(printf "%s" "$BUFFER")"
-    else
-        zle zsh-system-clipboard-vicmd-vi-put-after
-    fi
+# if buffer is single line then strip newlines from paste
+
+trim_leading_trailing_newlines() {
+    sed '/./,$!d' | tac | sed '/./,$!d' | tac
 }
-zle -N smart-paste
-bindkey -M vicmd p smart-paste
+
+smart-paste() {
+    wcs() { echo -n "$2" | wc "$1" }
+    offset="$1"
+    if [ $(wcs -l "$BUFFER") -eq 0 ]; then
+        clipboard="${$(pbpaste; echo .)%.}"
+        trimmed="$(printf "%s" "$clipboard" | trim_leading_trailing_newlines)"
+        if [ $(wcs -l "$trimmed") -le 1 ]; then
+            BUFFER="${BUFFER:0:$CURSOR + offset}$trimmed${BUFFER:$CURSOR + offset}"
+            CURSOR="$((CURSOR + $#trimmed - 1 + offset))"
+            return
+        fi
+    fi
+    offsets=(before after)
+    zle "zsh-system-clipboard-vicmd-vi-put-${offsets[offset + 1]}"
+}
+
+smart-paste-after() smart-paste 1
+smart-paste-before() smart-paste 0
+
+zle -N smart-paste-after
+bindkey -M vicmd p smart-paste-after
+
+zle -N smart-paste-before
+bindkey -M vicmd P smart-paste-before
+
+smart-replace() {
+    wcs() { echo -n "$2" | wc "$1" }
+    if [ "$REGION_ACTIVE" = 1 -a $(wcs -l "$BUFFER") -eq 0 ]; then
+        clipboard="${$(pbpaste; echo .)%.}"
+        if [ $(wcs -l "$clipboard") -le 1 ]; then
+            clipboard="$(printf "%s" "$clipboard")"
+            ve="$(( CURSOR > MARK ? CURSOR : MARK ))"
+            vs="$(( CURSOR < MARK ? CURSOR : MARK ))"
+            BUFFER="${BUFFER:0:$vs}$clipboard${BUFFER:$ve + 1}"
+            CURSOR="$((vs + $#clipboard - 1))"
+            zle visual-mode
+            return
+        fi
+    fi
+    zsh-system-clipboard-visual-put-replace-selection
+}
+
+zle -N smart-replace
+bindkey -M visual p smart-replace
+bindkey -M visual P smart-replace
 
 # }}}
 # ZSH SYNTAX HIGHLIGHTING SETTINGS {{{
@@ -202,27 +245,55 @@ if [ -n "$ZSH_HIGHLIGHT_VERSION" ]; then
 fi
 
 # }}}
-# HOOKS {{{
-
-save-history() {
-    fc -W
-}
+# # HOOKS {{{
+#
+# save-history() {
+#     fc -W
+# }
+setopt inc_append_history
 postcmd_functions+=(echo)
-postcmd_functions+=(save-history)
-
-# }}}
+# postcmd_functions+=(save-history)
+#
+# # }}}
 # ACCEPT LINE {{{
+
+# accept-computer-line() {
+#     computer "$(echo $1 | sed 's/^computer //')"
+# }
 
 accept-math-line() {
     expr.py "$1"
 }
 
-last-download() {
-    echo "$HOME/Downloads/$(ls -t "$HOME/Downloads" | head -1)"
+runtime_var_names=(DL CB)
+runtime_var_cmds=(
+    'echo ~/Downloads/$(ls -t ~/Downloads | head -1)'
+)
+
+cb() {
+    if [ ! -t 0 ] && [ -t 1 ]; then
+        if command-exists pbcopy; then pbcopy
+        elif command-exists wl-copy; then wl-copy
+        elif command-exists xclip; then xclip -selection clipboard
+        fi
+    else
+        if command-exists pbpaste; then pbpaste
+        elif command-exists wl-paste; then wl-paste
+        elif command-exists xclip; then xclip -selection clipboard -o
+        fi
+    fi
 }
 
-accept-dl-line() {
-    eval "$(echo "$1" | sd '\$DL\b' '"$(last-download)"')"
+accept-var-line() {
+    local cmd="$1"
+    # $CB: pipe context → bare cb (copy), value context → "$(cb)" (paste)
+    cmd="$(printf '%s' "$cmd" | sd '\|\s*\$CB\b' '| cb')"
+    cmd="$(printf '%s' "$cmd" | sd '\$CB\b' '"$(cb)"')"
+    # generic runtime vars
+    for i in {1..${#runtime_var_cmds[@]}}; do
+        cmd="$(printf '%s' "$cmd" | sd '\$'"${runtime_var_names[$i]}"'\b' '"$('"${runtime_var_cmds[$i]}"')"')"
+    done
+    eval "$cmd"
 }
 
 read-cursor-position() {
@@ -246,7 +317,7 @@ read-all-input() {
 reset-executing() {
     unset EXECUTING
 }
-precmd+=(reset-executing)
+precmd_functions+=(reset-executing)
 
 accept-dummy-line() {
     EXECUTING=1
@@ -254,7 +325,9 @@ accept-dummy-line() {
     BUFFER=""
     zle reset-prompt
     zle -R
-    print -s "$buffer"
+    if [ "$2" != 'false' ]; then
+        print -s "$buffer"
+    fi
     trigger-zle-line-init
     echo "$buffer"
     command-exists preexec && preexec
@@ -276,6 +349,11 @@ accept-dummy-line() {
     zle -U "$input"
 }
 
+zz-precmd() {
+    array-remove precmd_functions zz-precmd
+    zz && printf "\x1b[A"
+}
+
 accept-line () {
     if [[ "$BUFFER" = "k" ]]; then
         BUFFER="$(history \
@@ -288,10 +366,16 @@ accept-line () {
         zle redisplay
         zle -R
         trigger-zle-line-init
-    elif [[ "$BUFFER" =~ "^\\(*[0-9]" ]]; then
+    elif [ "$BUFFER" = "gb" ] || [ "$BUFFER" = "zz" ]; then
+        BUFFER=""
+        precmd_functions+=(zz-precmd)
+        zle .accept-line
+    # elif [[ "$BUFFER" =~ '^computer ' ]]; then
+    #     accept-dummy-line accept-computer-line false
+    elif [[ "$BUFFER" =~ "^[( ]*[0-9]" ]]; then
         accept-dummy-line accept-math-line
-    elif [[ "$BUFFER" =~ '\$DL' ]]; then
-        accept-dummy-line accept-dl-line
+    elif [[ "$BUFFER" =~ '\$('"${(j:|:)runtime_var_names}"')' ]]; then
+        accept-dummy-line accept-var-line
     else
         zle .accept-line
     fi
@@ -303,25 +387,43 @@ zle -N accept-line accept-line
 # SIGINT HANDLER {{{
 
 sigint-handler() {
-    if [ -z "$EXECUTING" ]; then
-        if zle; then
-            buffer="$BUFFER"
-            zle kill-buffer
-            zle -R
-            printf '\x1b[90m'
-            printf "$buffer"
+    if zle && [ -z "$EXECUTING" ]; then
+        if [ "$CONTEXT" = "start" ]; then
+            if [ "$LASTWIDGET" = "list-choices" ]; then
+                zle kill-buffer
+                zle .accept-line
+                printf "\x1b[2K"
+                trigger-precmd
+                return 130
+            fi
+            if [ -n "$BUFFER" ]; then
+                buffer="$(printf "%s" "$BUFFER" \
+                    | sed 's/ *$/\x1b[0m/g' \
+                    | sed -E 's/^( *)/\1\x1b[90;9;3m/g')"
+                zle kill-buffer
+                zle -R
+                printf "%s" "$buffer"
+                clear-style
+            fi
+            if [ "$KEYMAP" = "main" ]; then
+                echo
+                trigger-precmd
+                zle redisplay
+                return 0
+            else
+                trigger-precmd
+            fi
+        else
             trigger-precmd
-            clear-style
         fi
-    else
-        unset EXECUTING
     fi
+    return 130
 }
 
 register-sigint-handler() {
     function TRAPINT() {
         sigint-handler
-        return 130
+        return "$?"
     }
 }
 register-sigint-handler
@@ -423,7 +525,7 @@ alias ls="catls ls"
 
 lfcd () {
     local tmp="$(mktemp)"
-    ~/.local/bin/lf -last-dir-path="$tmp" "$@"
+    lf -last-dir-path="$tmp" "$@"
     if [ -f "$tmp" ]; then
         local dir="$(cat "$tmp")"
         \rm -f "$tmp" >/dev/null
@@ -443,6 +545,7 @@ expand-home() {
 }
 
 jfind-source() {
+    unregister-focus-events
     if [ -n "$TMUX" ]; then
         ~/.config/tmux/popup-jfind-source.sh
     else
@@ -462,6 +565,7 @@ zle -N jfind-source
 bind `ctrl f` jfind-source
 
 jfind-history() {
+    unregister-focus-events
     if [ -n "$TMUX" ]; then
         ~/.config/tmux/popup-jfind-zsh-history.sh "$BUFFER"
     else
@@ -485,11 +589,9 @@ jfind-complete() {
     else
         word=$(echo "$BUFFER" | awk '{print $NF}')
     fi
-    if [ -n "$TMUX" ]; then
-        ~/.config/tmux/popup-jfind-zsh-complete.sh "$word"
-    else
-        ~/.config/jfind/jfind-zsh-complete.sh "$word"
-    fi
+    echo
+    ~/.config/jfind/jfind-zsh-complete.sh "$word"
+    printf "\x1b[A"
     local output=$(cat ~/.cache/jfind_out)
     if [ -n "$output" ]; then
         if [ "$word" = "" ]; then
@@ -499,7 +601,10 @@ jfind-complete() {
         fi
         zle .end-of-line
         set-keymap vicmd
+    else
+        set-keymap main
     fi
+    zle reset-prompt
 }
 
 zle -N jfind-complete
@@ -596,6 +701,14 @@ alias "q!"=exit
 alias ":q"=exit
 alias ":q!"=exit
 
+# alias whoami=whoami
+alias whatami='sysctl hw.model'
+alias whenami=date
+alias whereami=pwd
+alias howami='pmset -g batt | grep -Eo \\d+%'
+alias whyami='echo bruh'
+alias whichami='echo $SHELL'
+
 pager() "$PAGER"
 editor() "$EDITOR"
 
@@ -617,23 +730,32 @@ ised() {
 # ZIP {{{
 
 unzip() {
-    if [ ! -e "$1" ]; then
-        echo "not found: $1" > /dev/stderr
-        return
-    fi
-    local outputDirectory="$(basename "$1" .zip)"
-    if [ -e "$outputDirectory" ]; then
-        echo "exists: $outputDirectory" > /dev/stderr
-        return
-    fi
-    command unzip -d "$outputDirectory" "$1"
-    if [ "$(ls "$outputDirectory" | wc -l)" -eq 1 ] && [ -d "$outputDirectory/$outputDirectory" ]; then
-        echo "flattening..."
-        tmp="$(mktemp -d)"
-        trap 'rm -rf -- "$tmp"' EXIT
-        mv "$outputDirectory/$outputDirectory/" "$tmp"
-        mv "$tmp/$outputDirectory/"* "$outputDirectory"
-    fi
+    invalid=0
+    for arg in "$@"; do
+        if [ ! -e "$arg" ]; then
+            echo "not found: $arg" > /dev/stderr
+            invalid=1
+            continue
+        fi
+        local outputDirectory="$(basename "$arg" .zip)"
+        if [ -e "$outputDirectory" ]; then
+            echo "exists: $outputDirectory" > /dev/stderr
+            invalid=1
+            continue
+        fi
+    done
+    [ $invalid -eq 1 ] && return 1
+    for arg in "$@"; do
+        local outputDirectory="$(basename "$arg" .zip)"
+        command unzip -d "$outputDirectory" "$arg"
+        if [ "$(ls "$outputDirectory" | wc -l)" -eq 1 ] && [ -d "$outputDirectory/$outputDirectory" ]; then
+            echo "flattening..."
+            tmp="$(mktemp -d)"
+            trap 'rm -rf -- "$tmp"' EXIT
+            mv "$outputDirectory/$outputDirectory/" "$tmp"
+            mv "$tmp/$outputDirectory/"* "$outputDirectory"
+        fi
+    done
 }
 
 zip() {
@@ -657,10 +779,63 @@ zip() {
 
 diff() {
     if [ "$#" -eq 2 -a -f "$1" -a -f "$2" ]; then
-        command diff -duw "$@" | page
+        command diff --color=auto -duw "$@" | pager
     else
-        command diff "$@"
+        command diff --color=auto "$@"
     fi
 }
 
 # }}}
+
+url_encode() {
+    python3 -c "import urllib.parse, sys; print(urllib.parse.quote(' '.join(sys.argv[1:])))" "$@"
+}
+
+url_decode() {
+    python3 -c "import urllib.parse, sys; print(urllib.parse.unquote(' '.join(sys.argv[1:])))" "$@"
+}
+
+LINUX='
+import readline
+import subprocess
+while True:
+    try:
+        line = input("$ ").strip()
+        if not line:
+            continue
+        elif line == "clear":
+            subprocess.Popen(["clear"]).wait()
+        elif line.startswith("$"):
+            line = line[1:].lstrip()
+            body = ["```"]
+            while (bodyLine := input("")):
+                body.append(bodyLine)
+            body.append("```")
+            subprocess.Popen(["computer", "--linux", "--response", "\n".join(body), line]).wait()
+        else:
+            subprocess.Popen(["computer", "--linux", line]).wait()
+    except KeyboardInterrupt:
+        print("^C")
+    except EOFError:
+        print()
+        break
+'
+linux() {
+    python3 -c "$LINUX"
+}
+
+sr() {
+    if [ -n "$TMUX" ]; then
+        cd "$(tmux display -p '#{session_path}')"
+    else
+        cd
+    fi
+}
+
+ok() {
+    test $? -eq 0
+}
+
+help() {
+    computer -p productive
+}

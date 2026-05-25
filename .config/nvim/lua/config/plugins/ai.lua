@@ -1,4 +1,4 @@
-return require "lazier" {
+return {
     "echasnovski/mini.ai",
     event = "VeryLazy",
     opts = {

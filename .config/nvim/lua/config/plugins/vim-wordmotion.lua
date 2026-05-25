@@ -1,4 +1,4 @@
-return require "lazier" {
+return {
     "chaoren/vim-wordmotion",
     keys = {
         {"<leader>w", mode = { "n", "x", "o" }},

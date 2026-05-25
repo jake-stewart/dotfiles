@@ -7,6 +7,8 @@ import tty
 import subprocess
 import shlex
 import io
+import tempfile
+import clipboard
 from PIL import Image
 
 glyphs = [
@@ -71,10 +73,10 @@ def tmuxPassthrough(string):
     string = string.replace("\x1b", "\x1b\x1b")
     return "\x1bPtmux;" + string + "\x1b\\"
 
-def allocateImageSpace(cols, rows):
+def allocateImageSpace(id, cols, rows):
     buffer = []
     for row in range(rows):
-        buffer.append("\x1b[38;5;70m")
+        buffer.append(f"\x1b[38;5;{id}m")
         for col in range(cols):
             buffer.append("\U0010EEEE")
             buffer.append(glyphs[row])
@@ -98,14 +100,24 @@ def show_mouse_cursor():
 def hide_mouse_cursor():
     os.system("tput civis")
 
+def new_id():
+    id = (last_id() + 1) % 256
+    with open("/Users/jakey/.cache/icat-id", "w") as f:
+        f.write(str(id))
+    return id
+
+def last_id():
+    try:
+        with open("/Users/jakey/.cache/icat-id", "r") as f:
+            return int(f.read())
+    except:
+        return 0
+
 def displayPopup():
     hide_mouse_cursor()
-
     size = os.get_terminal_size()
-    print(allocateImageSpace(size.columns, size.lines), end="")
-
+    print(allocateImageSpace(last_id(), size.columns, size.lines), end="")
     old_settings = set_terminal()
-
     try:
         sys.stdin.read(1)
     finally:
@@ -125,7 +137,8 @@ def gridFitImage(image_width, image_height, max_width, max_height):
     
     return int(grid_width), int(grid_height)
 
-def prepareImage(filename, client_width, client_height):
+
+def prepareImageOld(filename, client_width, client_height):
     image = Image.open(filename)
 
     buffer = io.BytesIO()
@@ -137,10 +150,19 @@ def prepareImage(filename, client_width, client_height):
     grid_width, grid_height = gridFitImage(
             image.width, image.height, max_width, max_height)
 
-    enableTmuxPassthrough()
-
-    b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+    b64 = base64.b64encode(buffer.getvalue()).decode("ascii")
     cmd = kittyGraphics(data=b64, f=100, q=2, U=1, i=70, a="T", c=grid_width-3, r=grid_height)
+    return cmd, grid_width, grid_height
+
+def prepareImage(id, filename, client_width, client_height):
+    tmp = tempfile.mktemp(suffix=".png");
+    subprocess.Popen(["magick", filename, tmp]).wait();
+    w, h = (int(x) for x in str(subprocess.check_output(["identify", "-ping", "-format", "%w %h", tmp]), encoding="ascii").split(" "));
+    max_width = min(200, client_width)
+    max_height = min(50, client_height)
+    grid_width, grid_height = gridFitImage(w, h, max_width, max_height)
+    b64 = base64.b64encode(bytes(tmp, encoding="ascii")).decode("ascii")
+    cmd = kittyGraphics(data=b64, t="f", f=100, q=2, U=1, i=id, a="T", c=grid_width-3, r=grid_height)
     return cmd, grid_width, grid_height
 
 def preparePopup(script, filename):
@@ -149,7 +171,7 @@ def preparePopup(script, filename):
     ]), encoding="ascii")
 
     client_width, client_height = [int(n) for n in output.split(",")]
-    cmd, grid_width, grid_height = prepareImage(filename, client_width, client_height)
+    cmd, grid_width, grid_height = prepareImage(new_id(), filename, client_width, client_height)
 
     print(tmuxPassthrough(cmd), end="")
 
@@ -163,12 +185,17 @@ def preparePopup(script, filename):
 
 if __name__ == "__main__":
     if sys.argv[1] == "popup":
+        enableTmuxPassthrough()
         preparePopup(os.path.abspath(sys.argv[0]),
             os.path.abspath(sys.argv[2]))
     elif sys.argv[1] == "display-popup":
         displayPopup()
     elif sys.argv[1] == "preview":
+        enableTmuxPassthrough()
         filename, width, height, x, y = sys.argv[2:]
-        cmd, grid_width, grid_height = prepareImage(filename, int(width), int(height))
-        print(tmuxPassthrough(cmd), file=sys.stderr, end="")
-        print(allocateImageSpace(grid_width, grid_height), end="")
+        id = new_id()
+        cmd, grid_width, grid_height = prepareImage(id, filename, int(width), int(height))
+        # print(width, height)
+        print(tmuxPassthrough(cmd), file=sys.stderr, end="", flush=True)
+        print(allocateImageSpace(id, grid_width, grid_height), end="\n")
+        # clipboard.copy(allocateImageSpace(grid_width, grid_height))

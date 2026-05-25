@@ -1,9 +1,14 @@
-return require "lazier" {
+return {
     "jake-stewart/shnippet.nvim",
     dir = "~/clones/shnippet.nvim",
     event = "VeryLazy",
     opts = {
         leader = "<c-f>",
+        overrides = {
+            rust = {
+                ["debug"] = "logger::log!($0);",
+            }
+        },
         keys = {
             ["print"] = "<down>",
             ["debug"] = "<c-d>",
@@ -22,6 +27,6 @@ return require "lazier" {
             ["struct"] = "<c-h>",
             ["try"] = "<c-t>",
             ["enum"] = "<c-n>"
-        }
+        },
     }
 }

@@ -119,9 +119,10 @@ local REEL_IN = {
     "Fishing_rod_reel_in2.ogg",
 }
 
-return require "lazier" {
+return {
     "EggbertFluffle/beepboop.nvim",
     dir = "~/clones/beepboop.nvim",
+    lazy = false,
     enabled = false,
     config = function()
         local beepboop = require("beepboop")
@@ -163,6 +164,4 @@ return require "lazier" {
             end
         })
     end,
-    lazy = false,
-    event = "VeryLazy",
 }

@@ -1,15 +1,16 @@
-display-prompt() {
-    date="$(date +%H:%M) "
-    branch=$(git rev-parse --abbrev-ref HEAD 2> /dev/null \
-        | sed 's:^refs/heads/::')
-    [[ "$branch" != "" ]] && branch="%F{green}[$branch]%f "
-    [ "$ZSH_DEPTH" -gt 1 ] && nested="%F{red}[$ZSH_DEPTH]%f "
-    dir="$(basename "$(pwd)") "
-    printf "%s$ " "${nested}${branch}${date}${dir}"
+regenerate-prompt() {
+    local nested="" branch="" date="$(date +%H:%M) "
+    local dir="$(basename "$(pwd)") "
+    local ref=$(git rev-parse --abbrev-ref HEAD 2>/dev/null | sed 's:^refs/heads/::')
+    [[ -n "$ref" ]] && branch="[$ref] "
+    [ "$ZSH_DEPTH" -gt 1 ] && nested="[$ZSH_DEPTH] "
+    PROMPT_LENGTH=${#:-${nested}${branch}${date}${dir}$ }
+    [[ -n "$ref" ]] && branch=$'%{\e[32m%}'"${branch}"$'%{\e[0m%}'
+    [ "$ZSH_DEPTH" -gt 1 ] && nested=$'%{\e[31m%}'"${nested}"$'%{\e[0m%}'
+    PROMPT="${nested}${branch}${date}${dir}$ "
 }
 
-setopt PROMPT_SUBST
-PROMPT='$(display-prompt)'
+precmd_functions+=(regenerate-prompt)
 
 set-minute-timeout() {
     seconds="$(date +%S)"
@@ -17,6 +18,7 @@ set-minute-timeout() {
 }
 
 function TRAPALRM() {
+    regenerate-prompt
     zle reset-prompt
     set-minute-timeout
 }
@@ -24,7 +26,8 @@ function TRAPALRM() {
 precmd_functions+=(set-minute-timeout)
 
 set-prompt-marker() {
-    printf '\x1b]133;A\x1b\\'
+    printf '\n\x1b[A\x1b[s\x1b]133;A\x1b\\\x1b[u\x1b[%dG' "$((PROMPT_LENGTH + 1))"
 }
+# precmd_functions+=(set-prompt-marker)
 init_functions+=(set-prompt-marker)
 

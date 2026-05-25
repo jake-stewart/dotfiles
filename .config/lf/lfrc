@@ -9,6 +9,7 @@
 set incsearch
 set hidden
 set previewer ~/.config/lf/preview.sh
+set cleaner ~/.config/lf/clean.sh
 
 map <c-g> push :glob-select<space>
 
@@ -48,13 +49,17 @@ cmd edit &{{
         image/*)
             ~/.config/tmux/popup-image.py popup "$f" > /dev/tty 2>/dev/null &;;
         *)
-            lf -remote "send $id \$$EDITOR \$fx";;
+            lf -remote "send $id \$$EDITOR \"\$fx\"";;
     esac
 }}
 
 map e edit
 map o &{{open "$f"}}
 
+map sm :set sortby ctime; set reverse; top
+map sn :set sortby natural; set noreverse
+
 # }}}
+
 
 # vim: foldmethod=marker

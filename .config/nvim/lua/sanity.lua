@@ -12,84 +12,80 @@ local unpack = function(t)
     return table.unpack(t, 1, t.n)
 end
 
-local TableMetatable = {}
+--- @generic T
+--- @class Array<T>: { [integer]: T }
+--- @overload fun(t?: table): Array
+array = {}
 
-TableMetatable.__index = table
+local array_mt = {
+    __index = array,
+    __call = function(t, _, i)
+        i = (i or 0) + 1
+        local item = t[i]
+        if item then
+            return i, item
+        end
+    end,
+}
 
-function TableMetatable.__call(t, _, i)
-    i = (i or 0) + 1
-    local item = t[i]
-    if item then
-        return i, item
-    end
-end
-
-setmetatable(table, {
+setmetatable(array, {
     __call = function(_, t)
-        return setmetatable(t or {}, TableMetatable)
-    end
+        return setmetatable(t or {}, array_mt)
+    end,
 })
 
---- @param container string | table
---- @param index number
-local function wrapContainerIndex(container, index)
-    return index < 0 and #container + index + 1 or index
-end
+local inspect_mod = require("vim.inspect")
+local inspect = inspect_mod.inspect
 
---- @param len number
---- @param index number
-local function wrapIndex(len, index)
-    return index < 0 and len + index + 1 or index
-end
-
---- @param len number
---- @param start? number
---- @param stop? number
-local function indexRange(len, start, stop)
-    start = start or 1
-    stop = stop or len
-    if start < 0 then
-        start = len + start + 1
+-- the metatable showing up in vim.inspect/vim.print is distracting
+--- @diagnostic disable-next-line
+function inspect_mod.inspect(x, opts)
+    opts = opts or {}
+    local process = opts.process
+        or function(y) return y end
+    opts.process = function(y)
+        if getmetatable(y) == array_mt then
+            y = setmetatable(y:clone(), nil)
+        end
+        return process(y)
     end
-    if stop < 0 then
-        stop = len + stop + 1
-    end
-    start = math.max(1, start)
-    stop = math.min(len, stop)
-    return start, stop
+    return inspect(x, opts)
 end
 
 --- @generic T
---- @param t table
---- @param fn fun(table, ...): T
+--- @generic R
+--- @param t Array<T>
+--- @param fn fun(t: Array<T>, ...): R
 --- @param ... any
---- @return T
-function table._pipe(t, fn, ...)
+--- @return R
+function array.pipe(t, fn, ...)
     return fn(t, unpack(pack(...)))
 end
 
 --- @generic T
---- @param t T
---- @param fn fun(table, ...)
+--- @param t Array<T>
+--- @param fn fun(t: Array<T>, ...)
 --- @param ... any
---- @return T
-function table._peek(t, fn, ...)
+--- @return Array<T>
+function array.peek(t, fn, ...)
     fn(t, unpack(pack(...)))
     return t
 end
 
---- @param t table
+--- @generic T
+--- @param t Array<T>
 --- @param i integer
---- @return any
-function table._at(t, i)
-    return t[wrapContainerIndex(t, i)]
+--- @return T
+function array.at(t, i)
+    return t[i < 0 and #t + i + 1 or i]
 end
 
---- @param t table
---- @param k any
---- @param default any
---- @return any
-function table._get(t, k, default)
+--- @generic T
+--- @param t Array<T>
+--- @param k integer
+--- @param default T
+--- @return T
+function array.get(t, k, default)
     local item = t[k]
     if item == nil then
         t[k] = default
@@ -98,11 +94,11 @@ function table._get(t, k, default)
     return item
 end
 
---- @generic T Table | table
---- @param t T
---- @param ... any
---- @return T
-function table._push(t, ...)
+--- @generic T
+--- @param t Array<T>
+--- @param ... T
+--- @return Array<T>
+function array.push(t, ...)
     local args = pack(...)
     for i = 1, args.n do
         table.insert(t, args[i])
@@ -110,52 +106,52 @@ function table._push(t, ...)
     return t
 end
 
---- @generic T Table | table
---- @param t T
---- @param value any
---- @param idx? integer
+--- @generic T
+--- @param t Array<T>
 --- @return T
-function table._insert(t, value, idx)
-    table.insert(
-        t,
-        value,
-        idx and wrapContainerIndex(t, idx)
-    )
-    return t
+function array.pop(t)
+    return table.remove(t)
 end
 
---- @param t table
+--- @generic T
+--- @param t Array<T>
+--- @param value T
 --- @param idx? integer
---- @return any
-function table._remove(t, idx)
-    return table.remove(
-        t,
-        idx and wrapContainerIndex(t, idx)
-    )
+function array.insert(t, value, idx)
+    table.insert(t, value, idx)
 end
 
---- @param t table
---- @param start? number
---- @param stop? number
---- @return Table
-function table._slice(t, start, stop)
+--- @generic T
+--- @param t Array<T>
+--- @param idx integer
+--- @return T
+function array.remove(t, idx)
+    return table.remove(t, idx)
+end
+
+--- @generic T
+--- @param t Array<T>
+--- @param start? integer
+--- @param stop? integer
+--- @return Array<T>
+function array.slice(t, start, stop)
     local result = {}
-    start, stop = indexRange(#t, start, stop)
+    stop = stop or #t
     for i = start, stop do
         table.insert(result, t[i])
     end
-    return table(result)
+    return array(result)
 end
 
---- @param t table
---- @param start number
---- @param deleteCount number
---- @param ... any
---- @return Table
-function table._splice(t, start, deleteCount, ...)
+--- @generic T
+--- @param t Array<T>
+--- @param start integer
+--- @param deleteCount integer
+--- @param ... T
+--- @return Array<T>
+function array.splice(t, start, deleteCount, ...)
     local newItems = { ... }
     deleteCount = math.max(0, deleteCount)
-    start = wrapIndex(#t, start)
     local temp = {}
     local spliced = {}
     for i = start, start + deleteCount - 1 do
@@ -174,37 +170,40 @@ function table._splice(t, start, deleteCount, ...)
     for _ = 1, #t - (start + #temp) do
         table.remove(t)
     end
-    return table(spliced)
+    return array(spliced)
 end
 
---- @param t table
-function table._unpack(t)
+--- @generic T
+--- @param t Array<T>
+--- @return T ...
+function array.unpack(t)
     return table.unpack(t)
 end
 
---- @param t table
---- @return Table
-function table._clone(t)
+--- @generic T
+--- @param t Array<T>
+--- @return Array<T>
+function array.clone(t)
     local result = {}
     for k, v in pairs(t) do
         result[k] = v
     end
-    return table(result)
+    return array(result)
 end
 
---- @generic T: Table | table
---- @param t T
---- @param func fun(a, b): boolean
---- @return T
-function table._sort(t, func)
+--- @generic T
+--- @param t Array<T>
+--- @param func fun(a: T, b: T): boolean
+--- @return Array<T>
+function array.sort(t, func)
     table.sort(t, func)
     return t
 end
 
---- @generic T: Table | table
---- @param t T
---- @return T
-function table._reverse(t)
+--- @generic T
+--- @param t Array<T>
+--- @return Array<T>
+function array.reverse(t)
     local i = 1
     local j = #t
     while i < j do
@@ -215,9 +214,10 @@ function table._reverse(t)
     return t
 end
 
---- @param t table
---- @return Table
-function table._uniq(t)
+--- @generic T
+--- @param t Array<T>
+--- @return Array<T>
+function array.uniq(t)
     local result = {}
     local exists = {}
     local hasNaN = false
@@ -249,25 +249,26 @@ function table._uniq(t)
             end
         end
     end
-    return table(result)
+    return array(result)
 end
 
---- @param ... (Table | table)[]
---- @return table
-function table._concat(...)
+--- @generic T
+--- @param ... Array<T> | table
+--- @return Array<T>
+function array.concat(...)
     local result = {}
     for _, t in ipairs({...}) do
         for _, v in ipairs(t) do
             table.insert(result, v)
         end
     end
-    return table(result)
+    return array(result)
 end
 
---- @generic T Table | table
---- @param t T
---- @return T
-function table._clear(t)
+--- @generic T
+--- @param t Array<T>
+--- @return Array<T>
+function array.clear(t)
     for i = #t, 1, -1 do
         t[i] = nil
     end
@@ -291,18 +292,19 @@ local function flatten(result, t, depth, maxDepth)
     return result
 end
 
---- @param t table
+--- @generic T
+--- @param t Array<T|Array<T>>
 --- @param depth? integer
---- @return Table
-function table._flat(t, depth)
-    return table(flatten({}, t, 0, depth or 1))
+--- @return Array<T>
+function array.flat(t, depth)
+    return array(flatten({}, t, 0, depth or 1))
 end
 
---- @generic T: Table | table
---- @param t T
---- @param callback fun(value: any, k: any): any
---- @return Table
-function table._filter(t, callback)
+--- @generic T
+--- @param t Array<T>
+--- @param callback fun(value: T, k: integer): boolean
+--- @return Array<T>
+function array.filter(t, callback)
     local result = {}
     local n = 1
     local i = 1
@@ -319,27 +321,29 @@ function table._filter(t, callback)
             end
         end
     end
-    return table(result)
-end
-
---- @generic T: Table | table
---- @param t T
---- @param callback fun(value: any, k: any): any
---- @return Table
-function table._map(t, callback)
-    local result = {}
-    for k, v in pairs(t) do
-        result[k] = callback(v, k)
-    end
-    return table(result)
+    return array(result)
 end
 
 --- @generic T
---- @param t table
---- @param reducer fun(acc: any, value: any): T
---- @param initialValue? any
---- @return T
-function table._reduce(t, reducer, initialValue)
+--- @generic R
+--- @param t Array<T>
+--- @param callback fun(value: T, k: integer): R
+--- @return Array<R>
+function array.map(t, callback)
+    local result = {}
+    for i, v in ipairs(t) do
+        result[i] = callback(v, i)
+    end
+    return array(result)
+end
+
+--- @generic T
+--- @generic R
+--- @param t Array<T>
+--- @param reducer fun(acc: R, value: T): R
+--- @param initialValue? R
+--- @return R
+function array.reduce(t, reducer, initialValue)
     local accumulator = initialValue
     local startIndex = 1
     if initialValue == nil then
@@ -352,22 +356,22 @@ function table._reduce(t, reducer, initialValue)
     return accumulator
 end
 
---- @generic T Table | table
---- @param t T
---- @param callback fun(value: any, k: any)
---- @return T
-function table._each(t, callback)
+--- @generic T
+--- @param t Array<T>
+--- @param callback fun(value: T, k: integer)
+--- @return Array<T>
+function array.each(t, callback)
     for k, v in pairs(t) do
         callback(v, k)
     end
     return t
 end
 
---- @generic T Table | table
---- @param t T
---- @param callback fun(value: any, k: any): boolean | nil
+--- @generic T
+--- @param t Array<T>
+--- @param callback fun(value: T, k: integer): boolean | nil
 --- @return boolean
-function table._any(t, callback)
+function array.any(t, callback)
     for k, v in pairs(t) do
         if callback(v, k) then
             return true
@@ -376,11 +380,11 @@ function table._any(t, callback)
     return false
 end
 
---- @generic T Table | table
---- @param t T
---- @param callback fun(value: any, k: any): boolean | nil
+--- @generic T
+--- @param t Array<T>
+--- @param callback fun(value: T, k: integer): boolean | nil
 --- @return boolean
-function table._all(t, callback)
+function array.all(t, callback)
     for k, v in pairs(t) do
         if not callback(v, k) then
             return false
@@ -389,46 +393,51 @@ function table._all(t, callback)
     return true
 end
 
---- @param t table
---- @param sep string
+--- @generic T
+--- @param t Array<T>
+--- @param sep? string
 --- @return string
-function table._join(t, sep)
+function array.join(t, sep)
     return table.concat(t, sep or "")
 end
 
---- @param t table
---- @return Table
-function table._keys(t)
+--- @generic T
+--- @param t Array<T>
+--- @return Array<integer>
+function array.keys(t)
     local keys = {}
     for k, _ in pairs(t) do
         table.insert(keys, k)
     end
-    return table(keys)
+    return array(keys)
 end
 
---- @param t table
---- @return Table
-function table._values(t)
+--- @generic T
+--- @param t Array<T>
+--- @return Array<T>
+function array.values(t)
     local values = {}
     for _, v in pairs(t) do
         table.insert(values, v)
     end
-    return table(values)
+    return array(values)
 end
 
---- @param t table
---- @return Table
-function table._entries(t)
+--- @generic T
+--- @param t Array<T>
+--- @return Array<Array<integer|T>>
+function array.entries(t)
     local entries = {}
     for k, v in pairs(t) do
-        table.insert(entries, table { k, v })
+        table.insert(entries, array({ k, v }))
     end
-    return table(entries)
+    return array(entries)
 end
 
---- @param ... table
---- @return Table
-function table._spread(...)
+--- @generic T
+--- @param ... Array<T>
+--- @return Array<T>
+function array.spread(...)
     local result = {}
     local items = pack(...)
     for i = 1, items.n do
@@ -439,13 +448,14 @@ function table._spread(...)
             end
         end
     end
-    return table(result)
+    return array(result)
 end
 
---- @param t table
---- @param element any
+--- @generic T
+--- @param t Array<T>
+--- @param element T
 --- @return boolean
-function table._contains(t, element)
+function array.contains(t, element)
     for _, v in ipairs(t) do
         if v == element then
             return true
@@ -454,13 +464,13 @@ function table._contains(t, element)
     return false
 end
 
---- @param t table
---- @param element any
---- @param startAt? integer
+--- @generic T
+--- @param t Array<T>
+--- @param element T
+--- @param start_at? integer
 --- @return integer | nil
-function table._index(t, element, startAt)
-    local len = #t
-    for i = wrapIndex(len, startAt or 0), len do
+function array.index(t, element, start_at)
+    for i = start_at or 1, #t do
         if t[i] == element then
             return i
         end
@@ -468,13 +478,13 @@ function table._index(t, element, startAt)
     return nil
 end
 
---- @param t table
---- @param element any
---- @param startAt? integer
+--- @generic T
+--- @param t Array<T>
+--- @param element T
+--- @param start_at? integer
 --- @return integer | nil
-function table._lastIndex(t, element, startAt)
-    local len = #t
-    for i = wrapIndex(len, startAt or len), 1, -1 do
+function array.last_index(t, element, start_at)
+    for i = start_at or #t, 1, -1 do
         if t[i] == element then
             return i
         end
@@ -482,13 +492,13 @@ function table._lastIndex(t, element, startAt)
     return nil
 end
 
---- @param t table
---- @param callback fun(value: any, index: integer): any
---- @param startAt? integer
---- @return any, integer | nil
-function table._find(t, callback, startAt)
-    local len = #t
-    for i = wrapIndex(len, startAt or 1), len do
+--- @generic T
+--- @param t Array<T>
+--- @param callback fun(value: T, index: integer): boolean
+--- @param start_at? integer
+--- @return T | nil, integer | nil
+function array.find(t, callback, start_at)
+    for i = start_at or 1, #t do
         if callback(t[i], i) then
             return t[i], i
         end
@@ -496,13 +506,13 @@ function table._find(t, callback, startAt)
     return nil
 end
 
---- @param t table
---- @param callback fun(value: any, index: integer): any
---- @param startAt? integer
---- @return any, integer | nil
-function table._findLast(t, callback, startAt)
-    local len = #t
-    for i = wrapIndex(len, startAt or len), 1, -1 do
+--- @generic T
+--- @param t Array<T>
+--- @param callback fun(value: T, index: integer): boolean
+--- @param start_at? integer
+--- @return T | nil, integer | nil
+function array.find_last(t, callback, start_at)
+    for i = start_at or #t, 1, -1 do
         if callback(t[i], i) then
             return t[i], i
         end
@@ -516,7 +526,7 @@ end
 --- @param fn fun(string, ...): T
 --- @param ... any
 --- @return T
-function string._pipe(s, fn, ...)
+function string.pipe(s, fn, ...)
     return fn(s, ...)
 end
 
@@ -525,23 +535,40 @@ end
 --- @param fn fun(string, ...)
 --- @param ... any
 --- @return T
-function string._peek(s, fn, ...)
+function string.peek(s, fn, ...)
     fn(s, ...)
     return s
 end
 
 --- @param s string
 --- @param i integer
-function string._at(s, i)
-    i = wrapContainerIndex(s, i)
+function string.at(s, i)
     return s:sub(i, i)
 end
 
+string.__index = function(s, k)
+    if type(k) == "number" then
+        return s:sub(k, k)
+    end
+    return string[k]
+end
+
 --- @param s string
---- @param sep string
---- @param trimEmpty? boolean
---- @return Table
-local function stringSplit(s, sep, trimEmpty)
+--- @param re vim.regex | string
+--- @return number | nil, number | nil
+function string.match_re(s, re)
+    if type(re) == "string" then
+        re = vim.regex(re)
+    end
+    return re:match_str(s)
+end
+
+--- @param s string
+--- @param sep? string
+--- @param trim_empty? boolean
+--- @return Array
+function string.split(s, sep, trim_empty)
+    sep = sep or ""
     local result = {}
     if sep == "" then
         for i = 1, #s do
@@ -554,77 +581,55 @@ local function stringSplit(s, sep, trimEmpty)
             if not start then
                 break
             end
-            if not trimEmpty or idx < start then
+            if not trim_empty or idx < start then
                 table.insert(result, s:sub(idx, start - 1))
             end
             idx = stop + 1
         end
-        if not trimEmpty or idx <= #s then
+        if not trim_empty or idx <= #s then
             table.insert(result, s:sub(idx, #s))
         end
     end
-    return table(result)
+    return array(result)
 end
 
 --- @param s string
---- @param re vim.regex | string
---- @return number | nil, number | nil
-function string._match(s, re)
+--- @param re string | vim.regex
+--- @param trim_empty? boolean
+--- @return Array
+function string.split_re(s, re, trim_empty)
+    re = re or ""
     if type(re) == "string" then
         re = vim.regex(re)
     end
-    return re:match_str(s)
-end
-
---- @param s string
---- @param re vim.regex
---- @param trimEmpty? boolean
---- @return Table
-local function regexSplit(s, re, trimEmpty)
     local result = {}
     while true and #s > 0 do
         local start, stop = re:match_str(s)
         if not start then
             break
         end
-        if not trimEmpty or start > 0 then
+        if not trim_empty or start > 0 then
             table.insert(result, s:sub(1, start))
         end
         s = s:sub(stop + 1, #s)
     end
-    if not trimEmpty or #s > 0 then
+    if not trim_empty or #s > 0 then
         table.insert(result, s)
     end
-    return table(result)
+    return array(result)
 end
-
---- @param s string
---- @param sep? string | vim.regex
---- @param trimEmpty? boolean
---- @return Table
-function string._split(s, sep, trimEmpty)
-    sep = sep or ""
-    if type(sep) == "string" then
-        return stringSplit(s, sep, trimEmpty)
-    else
-        return regexSplit(s, sep, trimEmpty)
-    end
-end
-
-string._upper = string.upper
-string._lower = string.lower
 
 --- @param s string
 --- @return string
-function string._trim(s)
+function string.trim(s)
     return s:match("^%s*(.*%S)") or ""
 end
 
 --- @param s string
 --- @param length integer
---- @param padChar string
+--- @param padChar? string
 --- @return string
-function string._padLeft(s, length, padChar)
+function string.pad_left(s, length, padChar)
     local padLength = length - #s
     if padLength > 0 then
         return (padChar or " "):rep(padLength) .. s
@@ -635,9 +640,9 @@ end
 
 --- @param s string
 --- @param length integer
---- @param padChar string
+--- @param padChar? string
 --- @return string
-function string._padRight(s, length, padChar)
+function string.pad_right(s, length, padChar)
     local padLength = length - #s
     if padLength > 0 then
         return s .. (padChar or " "):rep(padLength)
@@ -647,56 +652,62 @@ function string._padRight(s, length, padChar)
 end
 
 --- @param s string
+--- @param prefix string
+--- @param start_at? integer
+--- @return boolean
+function string.starts_with(s, prefix, start_at)
+    start_at = start_at or 1
+    return s:sub(start_at, start_at + #prefix - 1) == prefix
+end
+
+--- @param s string
+--- @param suffix string
+--- @param end_at? integer
+--- @return boolean
+function string.ends_with(s, suffix, end_at)
+    end_at = end_at or #s
+    return s:sub(end_at - #suffix + 1, end_at) == suffix
+end
+
+--- @param s string
 --- @param substring string
 --- @return boolean
-function string._contains(s, substring)
+function string.contains(s, substring)
     return s:find(substring, 1, true) ~= nil
 end
 
 --- @param s string
---- @param index? integer
---- @return integer
-function string._byte(s, index)
-    return string.byte(s, wrapContainerIndex(s, index or 0))
+--- @return Array
+function string.bytes(s)
+    return array({ string.byte(s, 1, #s) })
 end
 
 --- @param s string
---- @return table
-function string._bytes(s)
-    return table({ string.byte(s, 1, #s) })
-end
-
---- @param s string
---- @param start? integer
+--- @param start integer
 --- @param stop? integer
 --- @return string
-function string._slice(s, start, stop)
-    start, stop = indexRange(#s, start, stop)
+function string.slice(s, start, stop)
     return s:sub(start, stop)
 end
 
 --- @param s string
 --- @param substring string
---- @param startAt? integer
+--- @param start_at? integer
 --- @return integer | nil
-function string._index(s, substring, startAt)
-    return s:find(
-        substring,
-        wrapContainerIndex(s, startAt or 1),
-        true
-    )
+function string.index(s, substring, start_at)
+    return s:find(substring, start_at or 1, true)
 end
 
-local function findLastIndexRecurse(s, substring, idx, maxIdx)
+local function find_last_index_recurse(s, substring, idx, maxIdx)
     local start, stop = s:find(substring, idx, true)
     if start and stop <= maxIdx then
         local pivot = math.ceil((maxIdx - start) / 2)
         if pivot <= 1 then
-            return findLastIndexRecurse(s, substring, start + 1, maxIdx)
+            return find_last_index_recurse(s, substring, start + 1, maxIdx)
                 or start
         else
-            return findLastIndexRecurse(s, substring, start + pivot, maxIdx)
-                or findLastIndexRecurse(s, substring, start + 1, maxIdx)
+            return find_last_index_recurse(s, substring, start + pivot, maxIdx)
+                or find_last_index_recurse(s, substring, start + 1, maxIdx)
                 or start
         end
     end
@@ -704,56 +715,37 @@ end
 
 --- @param s string
 --- @param substring string
---- @param startAt? integer
+--- @param start_at? integer
 --- @return integer | nil
-function string._lastIndex(s, substring, startAt)
-    return findLastIndexRecurse(s, substring, 1, wrapContainerIndex(s, startAt or -1))
+function string.last_index(s, substring, start_at)
+    return find_last_index_recurse(s, substring, 1, start_at or #s)
 end
 
 --- @param s string
-function string._surround(s, left, right)
-    return left .. s .. right or left
-end
-
---- @param s string
---- @param re vim.regex
---- @param replacer fun(integer, integer): string
---- @param count number
---- @return string
-local function regexReplace(s, re, replacer, count)
-    local result = {}
-    local offset = 1
-    while #s > 0 and count > 0 do
-        local start, stop = re:match_str(s)
-        if not start then
-            break
-        end
-        table.insert(result, s:sub(1, start))
-        table.insert(result,
-            replacer(offset + start, offset + stop - 1))
-        s = s:sub(stop + 1, #s)
-        offset = offset + stop
-        count = count - 1
-    end
-    table.insert(result, s)
-    return table.concat(result, "")
+function string.surround(s, left, right)
+    return left .. s .. (right or left)
 end
 
 --- @param s string
 --- @param search string
---- @param replacer function(integer, integer): string
---- @param count number
+--- @param replace string | fun(string, integer, integer): string
+--- @param count? integer
 --- @return string
-local function stringReplace(s, search, replacer, count)
+function string.replace(s, search, replace, count)
     local result = {}
     local idx = 1
+    count = count or math.huge
     while count > 0 do
         local start, stop = s:find(search, idx, true)
         if not start then
             break
         end
         table.insert(result, s:sub(idx, start - 1))
-        table.insert(result, replacer(start, stop))
+        local rep = replace
+        if type(rep) == "function" then
+            rep = rep(s:sub(start, stop), start, stop)
+        end
+        table.insert(result, rep)
         count = count - 1
         idx = stop + 1
     end
@@ -762,27 +754,45 @@ local function stringReplace(s, search, replacer, count)
 end
 
 --- @param s string
---- @param search string | vim.regex
---- @param replace string | fun(string, integer): string
+--- @param re string | vim.regex
+--- @param replace string | fun(string, integer, integer): string
 --- @param count? integer
 --- @return string
-function string._replace(s, search, replace, count)
-    local replacer = type(replace) == "function"
-        and function(start, stop)
-            return replace(s:sub(start, stop), start)
-        end
-        or function()
-            return replace
-        end
-    if type(search) == "string" then
-        return stringReplace(s, search, replacer, count or math.huge)
-    else
-        return regexReplace(s, search, replacer, count or math.huge)
+function string.replace_re(s, re, replace, count)
+    if type(re) == "string" then
+        re = vim.regex(re)
     end
+    local result = {}
+    local offset = 1
+    count = count or math.huge
+    while #s > 0 and count > 0 do
+        local start, stop = re:match_str(s)
+        if not start then
+            break
+        end
+        table.insert(result, s:sub(1, start))
+        local rep = replace
+        if type(rep) == "function" then
+            rep = rep(
+                s:sub(start + 1, stop),
+                offset + start, offset + stop)
+        end
+        table.insert(result, rep)
+        s = s:sub(stop + 1, #s)
+        offset = offset + stop
+        count = count - 1
+    end
+    table.insert(result, s)
+    return table.concat(result, "")
 end
 
---- @class Table : tablelib, table
---- @field [string] any
+local string_mt = getmetatable("")
+local string_index = string_mt.__index
+function string_mt.__index(s, k)
+    if type(k) == "number" then
+        return string.sub(s, k, k)
+    end
+    return string_index[k]
+end
 
---- @class tablelib
---- @operator call: Table
+return array

@@ -8,11 +8,9 @@ local STRING_REGEX = "('[^']*'|\"[^\"]*\"|`[^`]*`)"
 local INT_REGEX = "(\\d+|0x\\d+)"
 local NUM_REGEX = "((\\d+(\\.\\d*)?|\\.\\d+)(e\\d+)?|0x\\d+|\\d+)"
 
-return require "lazier" {
+return {
     "jake-stewart/regex-vars.nvim",
     dir = "~/clones/regex-vars.nvim",
-    keys = {{ "/", mode = {"n", "v"} }},
-    lazy = false,
     config = function()
         local rv = require("regex-vars")
         rv.setup({
@@ -23,6 +21,5 @@ return require "lazier" {
             ["\\num"] = NUM_REGEX,
             ["\\int"] = INT_REGEX,
         })
-        -- rv.test()
     end
 }

@@ -1,9 +1,11 @@
 #!/bin/bash
 
+set -e
+
 CONF="$HOME/.config/tmux/sessions"
 
 selected="$1"
-[ -z "$selected" ] && selected=$(~/.config/jfind/jfind-session.sh)
+[ -z "$selected" ] && selected=$(~/.config/jfind/find-session.sh)
 [ -z "$selected" ] && exit;
 
 color=$(awk '/^'"$selected"' /{print $2}' "$CONF")
@@ -16,4 +18,4 @@ session_exists || \
     "$HOME/.config/tmux/create-session.sh" "$selected"
 
 tmux switch-client -t "$selected"
-tmux set-environment session_color "$color"
+tmux set-environment -t "$selected" session_color "$color"

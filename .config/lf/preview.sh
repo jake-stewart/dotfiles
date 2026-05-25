@@ -7,16 +7,26 @@ X="$4"
 Y="$5"
 
 previewText() {
-    bat \
+    syntax_fname="$1"
+    [[ "$syntax_fname" == *.json5 ]] && syntax_fname="$1.js"
+    head -c 16384 "$1" | bat \
         --color always \
         --theme ansi \
         --style plain \
         --paging never \
+        --italic-text always \
+        --tabs 4 \
         --line-range "1:$HEIGHT" \
-        "$1"
+        --file-name "$syntax_fname"
+        # --terminal-width "$WIDTH"
+        # --wrap character
 }
 
-case $(file --mime-type -Lb "$1") in
+mime_type="$(file --mime-type -Lb "$1")"
+case "$mime_type" in
+    # text/plain)
+    #     head -n "$HEIGHT" "$1"
+    #     ;;
     text/* | application/json)
         previewText "$1"
         ;;
@@ -28,4 +38,7 @@ case $(file --mime-type -Lb "$1") in
     #         "$X" \
     #         "$Y"
     #     ;;
+    *)
+        echo -e "\x1b[3m$mime_type\x1b[0m"
+        ;;
 esac

@@ -5,7 +5,7 @@ forceOwnWindow="$1"
 
 if [ -z "$forceOwnWindow" ]; then
     if [ $(tmux display -p "#{pane_width}") = $(tmux display -p "#{window_width}") ]; then
-        if [ $(tmux display -p "#{window_width}") -ge 160 ]; then
+        if [ $(tmux display -p "#{window_width}") -ge 140 ]; then
             layout="splitw -h -l 80"
         fi
     fi

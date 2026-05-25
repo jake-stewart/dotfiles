@@ -1,4 +1,4 @@
-return require "lazier" {
+return {
     "jake-stewart/slide.nvim",
     dir = "~/clones/slide.nvim",
     config = function()

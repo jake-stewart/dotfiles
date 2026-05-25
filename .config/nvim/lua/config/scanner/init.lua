@@ -1,11 +1,51 @@
+require "sanity"
+
 local log = require "config.util.log"
+local run = require "config.util.run"
 local Spinner = require "config.util.spinner"
 
-ERROR_SCANNERS = table {
-    javascript = "config.scanner.typescript",
-    typescript = "config.scanner.typescript",
-    typescriptreact = "config.scanner.typescript",
+local SCANNERS = array {
+    require "config.scanner.typescript",
+    require "config.scanner.cs",
+    require "config.scanner.rust",
 }
+
+local ERROR_SCANNERS = {}
+for _, spec in SCANNERS do
+    for _, ft in array(spec.filetype) do
+        ERROR_SCANNERS[ft] = spec
+    end
+end
+
+local function scan(spec, minimum_level)
+    local function execute(context)
+        local cmd = type(spec.command) == "function"
+            and spec.command(minimum_level)
+            or spec.command
+        return run.capture_async(cmd, {
+            allowed_status_codes = spec.allowed_status_codes
+        }):success(function(result)
+            local lines = array.concat(result.stdout, result.stderr):uniq()
+            local items = array()
+            for _, line in ipairs(lines) do
+                local item = spec.parse(line, context)
+                if item and ((not item.level) or item.level <= minimum_level) then
+                    items:push(item)
+                end
+            end
+            return items
+        end)
+    end
+
+    if spec.setup then
+        return spec.setup()
+            :success(function(context)
+                return execute(context)
+            end)
+    end
+
+    return execute(nil)
+end
 
 --- @class ErrorScanner
 --- @field private _scanning boolean
@@ -14,7 +54,7 @@ local ErrorScanner = {
 }
 
 --- @private
-function ErrorScanner:canScan()
+function ErrorScanner:can_scan()
     if vim.o.filetype == "" then
         log.error("No filetype set", false)
         return false
@@ -27,33 +67,32 @@ function ErrorScanner:canScan()
 end
 
 --- @private
-function ErrorScanner:getScanner(filetype)
-    local scannerModule = ERROR_SCANNERS[filetype]
-    if not scannerModule then
+function ErrorScanner:get_scanner(filetype)
+    local spec = ERROR_SCANNERS[filetype]
+    if not spec then
         log.error("No error scanner for " .. filetype, false)
         return nil
     end
-    return require(scannerModule)
+    return spec
 end
 
 function ErrorScanner:scan(level)
-    if not self:canScan() then
+    if not self:can_scan() then
         return
     end
-    local scanner = self:getScanner(vim.o.filetype)
-    if not scanner then
+    local spec = self:get_scanner(vim.o.filetype)
+    if not spec then
         return
     end
     self._scanning = true
-    local spinner = Spinner()
-    -- spinner:start()
-    scanner(level)
+    local spinner = Spinner("scanning")
+    spinner:start()
+    scan(spec, level)
         :success(function(results)
             if #results == 0 then
                 log.success("No issues found", false)
                 return
             end
-            log.info("", false)
             vim.fn.setqflist(results)
             vim.cmd.copen()
         end)
@@ -61,8 +100,8 @@ function ErrorScanner:scan(level)
             log.error("Error: " .. tostring(reason))
         end)
         :finally(function()
-            spinner:stop()
             self._scanning = false
+            spinner:stop(false)
         end)
 end
 

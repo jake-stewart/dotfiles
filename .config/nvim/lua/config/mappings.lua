@@ -54,10 +54,7 @@ local function fixSpelling()
     return "\"_yiw"
 end
 
-map("n", "<esc>", function()
-    vim.cmd.noh()
-end)
-
+map("n", "<esc>", vim.cmd.noh)
 
 map("n", "t<c-g>", function()
     -- vim.fn.setreg("+", vim.fn.getcwd())
@@ -128,11 +125,7 @@ end)
 
 -- last changed region (works for paste, too)
 map("o", ".", function()
-    -- vim.fn.getregtype()
-    --     :slice(0, 1)
-    --     :surround("`[", "`]")
-    --     [vim.cmd.norm]()
-    vim.cmd.norm("`[" .. vim.fn.getregtype()[1] .. "`]")
+    vim.cmd.norm("`[" .. vim.fn.getregtype():sub(1, 1) .. "`]")
 end)
 map("n", "tp", yankPopup)
 -- map("n", "<esc>", function()
@@ -145,6 +138,7 @@ map("n", "tp", yankPopup)
 map({"n", "v", "o"}, "gh", "^")
 map({"n", "v", "o"}, "gl", "$")
 map({"n", "v", "o"}, "gm", "%")
+-- map("v", "gl", "$h")
 
 -- 'A' is annoying because you have to release shift
 -- this causes me to type ':' instead of ';' very often
@@ -215,3 +209,37 @@ map("n", "h", function()
     end
     return "h"
 end, { expr = true })
+
+
+map({ "n", "x" }, '"/', function()
+    local reg
+    reg = vim.fn.getreginfo("s")
+    vim.api.nvim_create_autocmd("TextYankPost", {
+        callback = function()
+            if reg then
+                vim.fn.setreg("/", vim.v.event)
+                vim.fn.setreg("s", reg)
+                reg = nil
+            end
+        end,
+        once = true,
+    })
+    vim.api.nvim_create_autocmd("SafeState", {
+        callback = function()
+            reg = nil
+        end,
+        once = true,
+    })
+    return '"s'
+end, { expr = true })
+
+-- vim.keymap.set({"n", "v"}, "<c-y>", function()
+--     require("config._select").select_parent()
+-- end)
+--
+-- vim.keymap.set({"n", "v"}, "<c-e>", function()
+--     require("config._select").select_child()
+-- end)
+
+map("n", "<leader>?", "<cmd>Lazy<cr>")
+

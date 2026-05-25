@@ -1,4 +1,4 @@
-return require "lazier" {
+return {
     "jake-stewart/QFGrep",
     enabled = false,
     lazy = false,
